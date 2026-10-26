@@ -11,17 +11,22 @@ export const site = {
 
 /** Optional runtime knobs, all set at build time via NEXT_PUBLIC_* env vars. */
 export const engineConfig = {
-  model: process.env.NEXT_PUBLIC_BG_MODEL || "onnx-community/BiRefNet_lite-ONNX",
+  /** High-quality model used when WebGPU is available. */
+  gpuModel: process.env.NEXT_PUBLIC_BG_GPU_MODEL || "onnx-community/BiRefNet_lite-ONNX",
+  /** Lighter model for CPU (WASM) and for GPUs that can't run the big one. */
+  cpuModel: process.env.NEXT_PUBLIC_BG_CPU_MODEL || "Ko033/isnet-general-use-onnx",
+  /** Mirror of the Hugging Face model files (e.g. your own R2/CDN bucket). Empty = huggingface.co. */
+  modelHost: process.env.NEXT_PUBLIC_MODEL_HOST || "",
   transformersVersion: process.env.NEXT_PUBLIC_TRANSFORMERS_VERSION || "4.3.1",
   /** If set, images are POSTed here (multipart "image") and a PNG cut-out is expected back. */
   apiUrl: process.env.NEXT_PUBLIC_BG_API_URL || "",
 };
 
 export const mainNav = [
+  { href: "/", label: "Remove BG" },
   { href: "/remove-background", label: "Remove Background" },
   { href: "/background-remover", label: "Background Remover" },
-  { href: "/transparent-background", label: "Transparent PNG" },
-  { href: "/change-background-color", label: "Change Color" },
+  { href: "/bg-remove", label: "BG Remove" },
   { href: "/remove-bg-alternative", label: "remove.bg Alternative" },
 ];
 

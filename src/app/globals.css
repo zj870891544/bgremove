@@ -1,26 +1,106 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-ink: #0f1020;
+  --color-ink-soft: #4a4b63;
+  --color-ink-mute: #7c7d95;
+  --color-line: #e7e6f2;
+  --color-paper: #ffffff;
+  --color-mist: #f6f5fd;
+  --color-brand: #5940f5;
+  --color-brand-dark: #4429e0;
+  --color-brand-soft: #ece8ff;
+  --color-pop: #ff7a59;
+  --color-mint: #19c39c;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --shadow-card: 0 1px 2px rgb(15 16 32 / 0.04), 0 12px 40px -12px rgb(15 16 32 / 0.18);
+  --shadow-float: 0 30px 80px -20px rgb(68 41 224 / 0.35);
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-scan: scan 1.8s ease-in-out infinite;
+
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+  @keyframes scan {
+    0%, 100% { transform: translateY(-10%); opacity: 0; }
+    15%, 85% { opacity: 1; }
+    50% { transform: translateY(1000%); }
   }
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Transparency checkerboard — the visual signature of the product. */
+.checker {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #e9e8f1 25%, transparent 25%),
+    linear-gradient(-45deg, #e9e8f1 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e9e8f1 75%),
+    linear-gradient(-45deg, transparent 75%, #e9e8f1 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+.checker-sm {
+  background-color: #fff;
+  background-image:
+    linear-gradient(45deg, #dddce8 25%, transparent 25%),
+    linear-gradient(-45deg, #dddce8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #dddce8 75%),
+    linear-gradient(-45deg, transparent 75%, #dddce8 75%);
+  background-size: 10px 10px;
+  background-position: 0 0, 0 5px, 5px -5px, -5px 0;
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, #5940f5 10%, #b13df5 55%, #ff7a59 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-glow {
+  background:
+    radial-gradient(60% 60% at 85% 10%, rgb(177 61 245 / 0.10), transparent 70%),
+    radial-gradient(50% 60% at 10% 0%, rgb(89 64 245 / 0.10), transparent 70%);
+}
+
+.prose-seo p + p { margin-top: 0.9rem; }
+
+input[type="range"].slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-line);
+}
+input[type="range"].slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--color-brand);
+  border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+}
+input[type="range"].slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--color-brand);
+  border: 3px solid #fff;
 }
