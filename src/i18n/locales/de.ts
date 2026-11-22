@@ -36,6 +36,7 @@ const de: LocaleBundle = {
       retry: "Erneut versuchen",
       download: "HD-PNG herunterladen",
       preparing: "Wird vorbereitet…",
+      downloadFailed: "Der Download konnte nicht vorbereitet werden. Bitte versuche es erneut.",
       fullRes: "Volle Auflösung {w} × {h} · kostenlos, ohne Wasserzeichen",
       notReady: "Verfügbar, sobald die Verarbeitung fertig ist",
       zip: "Alle als ZIP herunterladen ({done}/{total})",
@@ -47,6 +48,7 @@ const de: LocaleBundle = {
       gradients: "Verläufe",
       photos: "Fotos",
       uploadBg: "Hochladen",
+      backgroundFailed: "Dieser Hintergrund konnte nicht geöffnet werden. Versuche es erneut oder wähle ein anderes Bild.",
       transparent: "Transparent",
       blur: "Original weichzeichnen",
       white: "Weiß",
@@ -60,6 +62,18 @@ const de: LocaleBundle = {
       reset: "Zum KI-Ergebnis zurück",
       tip: "Tipp: Das blasse Bild zeigt das Originalfoto. Mit Wiederherstellen malst du Teile zurück, mit Radieren entfernst du Reste. Strg/⌘ + Z macht rückgängig.",
       processedIn: "Auf deinem Gerät verarbeitet in {s} s",
+      quality: "KI-Qualität",
+      qualityFast: "Schnell",
+      qualityHd: "HD",
+      qualityUltra: "Ultra",
+      qualityGpuOnly: "Ultra erfordert einen Browser mit WebGPU-Unterstützung.",
+      edgeRefine: "Kantenverfeinerung",
+      defringe: "Farbsäume entfernen",
+      defringeHint: "Hintergrundfarbstiche an Haaren & Kanten säubern",
+      defringeStrength: "Farbsaum-Stärke",
+      guidedEdges: "Kanten am Foto schärfen",
+      guidedEdgesHint: "Maske präzise an hochauflösenden Kanten ausrichten",
+      twoPass: "2-Pass-Zuschnitt",
     },
     page: {
       badge: "Kostenlos · Ohne Anmeldung · Läuft im Browser",
@@ -115,7 +129,7 @@ const de: LocaleBundle = {
     },
     steps: [
       { title: "Bild hochladen", text: "Auf Bild hochladen klicken, Datei hineinziehen, mit Strg/⌘ + V einfügen oder eine URL eingeben." },
-      { title: "KI entfernt den Hintergrund", text: "Das Modell trennt Motiv und Hintergrund automatisch – meist in 1 bis 3 Sekunden." },
+      { title: "KI entfernt den Hintergrund", text: "Das Modell trennt Motiv und Hintergrund automatisch. Die Verarbeitungszeit hängt von deinem Gerät ab." },
       { title: "Bearbeiten & herunterladen", text: "Transparent lassen oder Farbe, Unschärfe bzw. Foto wählen und das HD-PNG oder JPG speichern." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const de: LocaleBundle = {
         heading: "Was bedeutet „remove bg“?",
         paragraphs: [
           "„Remove bg“ ist die englische Kurzform für „Hintergrund entfernen“: Das Motiv bleibt, alles andere wird transparent. Gespeichert wird als PNG, weil dieses Format Transparenz unterstützt – so lässt sich das freigestellte Motiv ohne sichtbaren Kasten auf jede Farbe oder jedes Foto setzen.",
-          "Von Hand in Photoshop freizustellen dauert bei Haaren schnell 10 bis 30 Minuten. Ein KI-Tool erledigt das in einer Sekunde, indem es Pixel für Pixel vorhersagt, was zum Motiv gehört.",
+          "Von Hand in Photoshop freizustellen dauert bei Haaren schnell 10 bis 30 Minuten. Ein KI-Tool automatisiert diese Arbeit, indem es Pixel für Pixel vorhersagt, was zum Motiv gehört.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const de: LocaleBundle = {
     faqs: [
       { q: "Ist BGRemove wirklich kostenlos?", a: "Ja. Hintergrund entfernen, Ergebnis bearbeiten und das PNG in voller Auflösung herunterladen kostet nichts und braucht kein Konto. Keine Credits, keine Wasserzeichen, kein Tageslimit." },
       { q: "Werden meine Bilder auf einen Server hochgeladen?", a: "Nein. Das KI-Modell wird einmal heruntergeladen und läuft per WebGPU oder WebAssembly in deinem Browser. Deine Fotos verlassen nie dein Gerät – DSGVO-freundlich." },
-      { q: "Warum dauert das erste Bild länger?", a: "Beim ersten Mal lädt der Browser das KI-Modell (ca. 90–115 MB). Danach ist es zwischengespeichert und jedes Bild ist in wenigen Sekunden fertig – auch bei späteren Besuchen." },
+      { q: "Warum dauert das erste Bild länger?", a: "Beim ersten Mal lädt der Browser das KI-Modell (ca. 90–115 MB). Danach ist es für spätere Besuche zwischengespeichert. Die Verarbeitungszeit hängt von deinem Gerät ab." },
       { q: "Welche Formate werden unterstützt?", a: "JPG, PNG, WebP, AVIF, BMP, GIF und HEIC vom iPhone. Das Ergebnis gibt es als transparentes PNG oder – mit Hintergrund – als JPG und WebP." },
       { q: "Darf ich die Ergebnisse kommerziell nutzen?", a: "Ja. Deine bearbeiteten Bilder gehören dir – für Onlineshops, Werbung oder Kundenprojekte, solange du die Rechte am Originalfoto hast." },
       { q: "Funktioniert es auf dem Handy?", a: "Ja, in Safari und Chrome auf iPhone und Android. Bild hochladen antippen, Foto aus der Galerie wählen und das Ergebnis aufs Handy speichern." },

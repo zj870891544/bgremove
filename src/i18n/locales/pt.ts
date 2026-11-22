@@ -36,6 +36,7 @@ const pt: LocaleBundle = {
       retry: "Tentar de novo",
       download: "Baixar PNG em HD",
       preparing: "Preparando…",
+      downloadFailed: "Não foi possível preparar o download. Tente novamente.",
       fullRes: "Resolução total {w} × {h} · grátis, sem marca d'água",
       notReady: "Disponível quando o processamento terminar",
       zip: "Baixar tudo em ZIP ({done}/{total})",
@@ -47,6 +48,7 @@ const pt: LocaleBundle = {
       gradients: "Degradês",
       photos: "Fotos",
       uploadBg: "Enviar",
+      backgroundFailed: "Não foi possível abrir este fundo. Tente novamente ou escolha outra imagem.",
       transparent: "Transparente",
       blur: "Desfocar original",
       white: "Branco",
@@ -60,6 +62,18 @@ const pt: LocaleBundle = {
       reset: "Voltar ao resultado da IA",
       tip: "Dica: a imagem esmaecida é a foto original. Use Restaurar para trazer partes de volta e Apagar para limpar restos. Pressione Ctrl/⌘ + Z para desfazer.",
       processedIn: "Processado no seu dispositivo em {s} s",
+      quality: "Qualidade da IA",
+      qualityFast: "Rápido",
+      qualityHd: "HD",
+      qualityUltra: "Ultra",
+      qualityGpuOnly: "O modo Ultra exige um navegador com suporte a WebGPU.",
+      edgeRefine: "Refino de bordas",
+      defringe: "Remover halo de cor",
+      defringeHint: "Limpa resquícios de cor do fundo em cabelos e bordas",
+      defringeStrength: "Intensidade do antihalo",
+      guidedEdges: "Ajustar bordas à foto",
+      guidedEdgesHint: "Alinha a máscara com precisão às bordas em alta resolução",
+      twoPass: "Recorte em 2 etapas",
     },
     page: {
       badge: "Grátis · Sem cadastro · Funciona no navegador",
@@ -115,7 +129,7 @@ const pt: LocaleBundle = {
     },
     steps: [
       { title: "Envie sua imagem", text: "Clique em Enviar imagem, arraste um arquivo, cole com Ctrl/⌘ + V ou informe uma URL." },
-      { title: "A IA remove o fundo", text: "O modelo separa o objeto do fundo automaticamente, normalmente em 1 a 3 segundos." },
+      { title: "A IA remove o fundo", text: "O modelo separa o objeto do fundo automaticamente. O tempo de processamento depende do seu dispositivo." },
       { title: "Edite e baixe", text: "Deixe transparente ou escolha uma cor, desfoque ou foto de fundo e baixe o PNG ou JPG em HD." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const pt: LocaleBundle = {
         heading: "O que significa “remove bg”?",
         paragraphs: [
           "“Remove bg” é a forma abreviada em inglês de “remover o fundo” de uma imagem: manter o objeto principal e deixar todo o resto transparente. O resultado é salvo em PNG, formato que suporta transparência, para você colocar o recorte sobre qualquer cor ou foto sem aquele quadrado em volta.",
-          "Fazer isso à mão no Photoshop pode levar de 10 a 30 minutos quando a foto tem cabelo. Um removedor de fundo com IA faz o mesmo em um segundo, prevendo pixel a pixel o que pertence ao objeto.",
+          "Fazer isso à mão no Photoshop pode levar de 10 a 30 minutos quando a foto tem cabelo. Um removedor de fundo com IA automatiza esse trabalho, prevendo pixel a pixel o que pertence ao objeto.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const pt: LocaleBundle = {
     faqs: [
       { q: "O BGRemove é grátis mesmo?", a: "Sim. Remover o fundo, editar o recorte e baixar o PNG em resolução total não custa nada e não exige conta. Não há créditos, marca d'água nem limite diário." },
       { q: "Minhas imagens são enviadas para um servidor?", a: "Não. O modelo de IA é baixado uma vez e roda no seu navegador com WebGPU ou WebAssembly. Suas fotos nunca saem do seu dispositivo." },
-      { q: "Por que a primeira imagem demora mais?", a: "Na primeira vez o navegador baixa o modelo de IA (cerca de 90–115 MB). Depois ele fica salvo e cada imagem é processada em poucos segundos, inclusive em visitas futuras." },
+      { q: "Por que a primeira imagem demora mais?", a: "Na primeira vez o navegador baixa o modelo de IA (cerca de 90–115 MB). Depois ele fica salvo para visitas futuras. O tempo de processamento depende do seu dispositivo." },
       { q: "Quais formatos são aceitos?", a: "JPG, PNG, WebP, AVIF, BMP, GIF e HEIC do iPhone. O resultado sai em PNG transparente, ou em JPG e WebP quando você adiciona um fundo." },
       { q: "Posso usar as imagens comercialmente?", a: "Sim. As imagens que você processa são suas: use em lojas, anúncios e projetos de clientes, desde que tenha os direitos da foto original." },
       { q: "Funciona no celular?", a: "Sim, no Safari e no Chrome para iPhone e Android. Toque em Enviar imagem, escolha uma foto da galeria e salve o resultado no celular." },

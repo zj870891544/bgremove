@@ -38,7 +38,7 @@ const commonFaqs: Record<string, Faq> = {
   },
   first: {
     q: "Why does the first image take longer?",
-    a: "The first time you use BGRemove your browser downloads the AI model (about 90–115 MB depending on your device). It is cached afterwards, so every following image — even on later visits — is processed in a couple of seconds.",
+    a: "The first time you use BGRemove your browser downloads the AI model (about 90–115 MB depending on your device). It is cached for later visits. Processing time depends on your device, and first use also prepares the model for inference.",
   },
   commercial: {
     q: "Can I use the results commercially?",
@@ -70,7 +70,7 @@ export const pages: LandingContent[] = [
     },
     steps: [
       { title: "Upload your image", text: "Click Upload Image, drag a file onto the page, paste with Ctrl/⌘ + V, or enter an image URL." },
-      { title: "AI removes the background", text: "The model separates the subject from the background automatically — usually in 1–3 seconds." },
+      { title: "AI removes the background", text: "The model separates the subject from the background automatically. Processing time depends on your device." },
       { title: "Edit and download", text: "Keep it transparent or pick a colour, blur or photo background, then download the HD PNG or JPG." },
     ],
     useCases: [
@@ -84,7 +84,7 @@ export const pages: LandingContent[] = [
         heading: "What does “remove bg” actually do?",
         paragraphs: [
           "“Remove bg” is shorthand for removing the background of an image — keeping the foreground subject and making every other pixel transparent. The result is usually saved as a PNG, because PNG supports an alpha channel that stores transparency. You can then place that cut-out on any colour, gradient or photo without a visible box around it.",
-          "Doing this by hand in Photoshop means tracing edges with the pen tool or painting a layer mask, which can take 10–30 minutes for a photo with hair. An AI background remover does the same job in a second by predicting, pixel by pixel, how much of each point belongs to the subject.",
+          "Doing this by hand in Photoshop means tracing edges with the pen tool or painting a layer mask, which can take 10–30 minutes for a photo with hair. An AI background remover automates that work by predicting, pixel by pixel, how much of each point belongs to the subject.",
         ],
       },
       {
@@ -120,7 +120,7 @@ export const pages: LandingContent[] = [
     sub: "People, products, animals, cars, logos and signatures — BGRemove cuts them out with clean edges and gives you the full-resolution result.",
     howTo: "How to remove background from an image",
     intro: {
-      heading: "Remove background from image online in three seconds",
+      heading: "Remove background from image automatically online",
       paragraphs: [
         "Need to remove the background from a picture right now? Upload it here and BGRemove does the rest. The AI detects the main subject, builds a precise mask and removes the background while keeping fine details such as strands of hair, pet fur, lace and glass reflections.",
         "There's nothing to install and nothing to learn. It works the same on Windows, macOS, Linux, ChromeOS, iPhone and Android, directly in the browser you're using to read this page.",
@@ -275,13 +275,13 @@ export const pages: LandingContent[] = [
       "BG remove for free at BGRemove.cc. Remove image bg automatically, get a transparent PNG in HD and change the bg to any colour or photo. Fast, private, unlimited.",
     h1: "BG remove",
     h1Accent: "fast, free, private",
-    sub: "BGRemove.cc removes image bg instantly — then lets you swap in a new bg colour or photo before you download.",
+    sub: "BGRemove.cc removes image bg automatically — then lets you swap in a new bg colour or photo before you download.",
     howTo: "BG remove in 3 steps",
     intro: {
       heading: "Online bg remove that runs on your device",
       paragraphs: [
         "BGRemove.cc was built for one job: the quickest possible bg remove. There's no landing-page maze and no upsell between you and the download — the tool sits right at the top of every page.",
-        "Behind the scenes a modern AI model runs locally through WebGPU or WebAssembly. After a one-time model download, bg remove takes about as long as opening the image.",
+        "Behind the scenes a modern AI model runs locally through WebGPU or WebAssembly. The model is cached after its first download, and processing time depends on your device.",
       ],
     },
     steps: [

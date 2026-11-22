@@ -53,7 +53,7 @@ const pages: LocalePages = {
     content: {
       slug: "white-background",
       keyword: "흰 배경",
-      metaTitle: "사진 배경 흰색으로 바꾸기 무료 – 흰 배경 누끼 1초 완성 | BGRemove",
+      metaTitle: "사진 배경 흰색으로 바꾸기 무료 – 흰 배경 누끼 자동 완성 | BGRemove",
       metaDescription:
         "사진 배경을 클릭 한 번으로 흰색으로. BGRemove가 원래 배경을 지우고 깨끗한 흰색으로 바꿔 줍니다. 스마트스토어·쿠팡 상품 사진, 증명사진, 프로필 사진에 딱이에요.",
       h1: "사진 배경 흰색으로",

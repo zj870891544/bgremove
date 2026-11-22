@@ -1,6 +1,14 @@
 "use client";
 
 import type { MaskResult } from "./engine";
+import {
+  cleanAlphaMask,
+  decontaminateForeground,
+  fastGuidedUpsample,
+  type RefineOptions,
+} from "./postprocess";
+
+export type { RefineOptions } from "./postprocess";
 
 /**
  * Phones and low-memory devices get tighter limits: iOS Safari refuses canvases above
@@ -106,27 +114,176 @@ export async function decodeImage(file: Blob, name = "") {
 }
 
 /** Mask canvas: white pixels whose alpha is the predicted foreground probability. */
-export function buildMask(result: MaskResult, width: number, height: number) {
+export function buildMask(
+  result: MaskResult,
+  width: number,
+  height: number,
+  original?: HTMLCanvasElement,
+  options?: RefineOptions
+): HTMLCanvasElement {
+  const shouldClean = options?.cleanAlpha !== false;
+
+  if (
+    original &&
+    options?.guidedRefine !== false &&
+    original.width === width &&
+    original.height === height
+  ) {
+    const octx = original.getContext("2d")!;
+    const guideData = octx.getImageData(0, 0, width, height).data;
+    const upsampled = fastGuidedUpsample(
+      result.mask,
+      result.width,
+      result.height,
+      guideData,
+      width,
+      height
+    );
+    const alpha = shouldClean ? cleanAlphaMask(upsampled) : upsampled;
+    const mask = makeCanvas(width, height);
+    const mctx = mask.getContext("2d", { willReadFrequently: true })!;
+    const img = mctx.createImageData(width, height);
+    const d = img.data;
+    for (let i = 0, j = 0; i < alpha.length; i++, j += 4) {
+      d[j] = 255;
+      d[j + 1] = 255;
+      d[j + 2] = 255;
+      d[j + 3] = alpha[i];
+    }
+    mctx.putImageData(img, 0, 0);
+    return mask;
+  }
+
+  const srcMask = shouldClean ? cleanAlphaMask(result.mask) : result.mask;
   const small = makeCanvas(result.width, result.height);
   const sctx = small.getContext("2d")!;
   const img = sctx.createImageData(result.width, result.height);
   const d = img.data;
-  for (let i = 0, j = 0; i < result.mask.length; i++, j += 4) {
+  for (let i = 0, j = 0; i < srcMask.length; i++, j += 4) {
     d[j] = 255;
     d[j + 1] = 255;
     d[j + 2] = 255;
-    d[j + 3] = result.mask[i];
+    d[j + 3] = srcMask[i];
   }
   sctx.putImageData(img, 0, 0);
   const mask = makeCanvas(width, height);
   const mctx = mask.getContext("2d", { willReadFrequently: true })!;
   mctx.imageSmoothingQuality = "high";
   mctx.drawImage(small, 0, 0, width, height);
+  releaseCanvas(small);
   return mask;
 }
 
-/** Recompute the cut-out (original × mask) — optionally only inside a dirty rectangle. */
-export function updateCut(cut: HTMLCanvasElement, original: HTMLCanvasElement, mask: HTMLCanvasElement, r?: Rect) {
+/**
+ * Remove background color spill along the mask boundary while retaining the source
+ * image's transparency. updateCut applies the predicted mask separately, once.
+ * Returns `null` when defringing is disabled.
+ */
+export function buildDecontaminatedForeground(
+  original: HTMLCanvasElement,
+  mask: HTMLCanvasElement,
+  options?: RefineOptions
+): HTMLCanvasElement | null {
+  const rawStrength = options?.defringeStrength;
+  const strength = rawStrength !== undefined && Number.isFinite(rawStrength) ? rawStrength : 0.9;
+  if (options?.defringe === false || strength <= 0) return null;
+
+  const width = original.width;
+  const height = original.height;
+  if (width <= 0 || height <= 0 || mask.width !== width || mask.height !== height) {
+    return null;
+  }
+
+  const octx = original.getContext("2d")!;
+  const mctx = mask.getContext("2d", { willReadFrequently: true })!;
+  const origRgba = octx.getImageData(0, 0, width, height).data;
+  const maskRgba = mctx.getImageData(0, 0, width, height).data;
+
+  const alpha = new Uint8ClampedArray(width * height);
+  for (let i = 0, j = 3; i < alpha.length; i++, j += 4) {
+    alpha[i] = maskRgba[j];
+  }
+
+  const cleaned = decontaminateForeground(origRgba, alpha, width, height, { strength });
+  for (let j = 3; j < cleaned.length; j += 4) {
+    cleaned[j] = origRgba[j];
+  }
+
+  const fg = makeCanvas(width, height);
+  const fctx = fg.getContext("2d")!;
+  const outImg = fctx.createImageData(width, height);
+  outImg.data.set(cleaned);
+  fctx.putImageData(outImg, 0, 0);
+  return fg;
+}
+
+/**
+ * Build a foreground RGB canvas (alpha = 255) from a remote engine's RGBA cut-out result
+ * so server-decontaminated edge colors are preserved without double-multiplying alpha.
+ */
+export function buildForegroundFromRgba(
+  result: MaskResult,
+  width: number,
+  height: number
+): HTMLCanvasElement | null {
+  if (
+    !result.rgba ||
+    result.width <= 0 ||
+    result.height <= 0 ||
+    width <= 0 ||
+    height <= 0 ||
+    result.rgba.length < result.width * result.height * 4
+  ) {
+    return null;
+  }
+
+  if (result.width === width && result.height === height) {
+    const fg = makeCanvas(width, height);
+    const fctx = fg.getContext("2d")!;
+    const outImg = fctx.createImageData(width, height);
+    const d = outImg.data;
+    const src = result.rgba;
+    for (let j = 0; j < d.length; j += 4) {
+      d[j] = src[j];
+      d[j + 1] = src[j + 1];
+      d[j + 2] = src[j + 2];
+      d[j + 3] = 255;
+    }
+    fctx.putImageData(outImg, 0, 0);
+    return fg;
+  }
+
+  // Scale in premultiplied alpha space so transparent pixels don't bleed black into edges,
+  // then set alpha to 255 so updateCut's destination-in mask doesn't square semi-transparent alpha.
+  const small = makeCanvas(result.width, result.height);
+  const sctx = small.getContext("2d")!;
+  const sImg = sctx.createImageData(result.width, result.height);
+  sImg.data.set(result.rgba.subarray(0, sImg.data.length));
+  sctx.putImageData(sImg, 0, 0);
+
+  const fg = makeCanvas(width, height);
+  const fctx = fg.getContext("2d", { willReadFrequently: true })!;
+  fctx.imageSmoothingQuality = "high";
+  fctx.drawImage(small, 0, 0, width, height);
+  releaseCanvas(small);
+
+  const scaled = fctx.getImageData(0, 0, width, height);
+  const d = scaled.data;
+  for (let j = 3; j < d.length; j += 4) {
+    d[j] = 255;
+  }
+  fctx.putImageData(scaled, 0, 0);
+  return fg;
+}
+
+/** Recompute the cut-out (foreground/original × mask) — optionally only inside a dirty rectangle. */
+export function updateCut(
+  cut: HTMLCanvasElement,
+  original: HTMLCanvasElement,
+  mask: HTMLCanvasElement,
+  r?: Rect,
+  foreground?: HTMLCanvasElement | null
+) {
   const ctx = cut.getContext("2d")!;
   const { x, y, w, h } = r ?? { x: 0, y: 0, w: cut.width, h: cut.height };
   ctx.save();
@@ -134,7 +291,7 @@ export function updateCut(cut: HTMLCanvasElement, original: HTMLCanvasElement, m
   ctx.rect(x, y, w, h);
   ctx.clip();
   ctx.globalCompositeOperation = "copy";
-  ctx.drawImage(original, 0, 0);
+  ctx.drawImage(foreground ?? original, 0, 0);
   ctx.globalCompositeOperation = "destination-in";
   ctx.drawImage(mask, 0, 0);
   ctx.restore();

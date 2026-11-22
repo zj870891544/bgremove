@@ -1,16 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { zipSync } from "fflate";
-import { getEngineStatus, subscribeEngine } from "@/lib/remover/engine";
+import {
+  type EngineCapabilities,
+  type QualityTier,
+  detectCapabilities,
+  getEngineStatus,
+  getQualityTier,
+  setQualityTier,
+  subscribeEngine,
+  subscribeQualityTier,
+} from "@/lib/remover/engine";
 import {
   type Background,
   type ExportFormat,
   baseName,
   buildMask,
+  decodeImage,
   downloadBlob,
   exportImage,
   historyBudgetBytes,
+  releaseCanvas,
   thumbnail,
   updateCut,
 } from "@/lib/remover/render";
@@ -43,11 +54,14 @@ function loadImg(url: string) {
   if (!imageCache.has(url)) {
     imageCache.set(
       url,
-      new Promise((resolve, reject) => {
+      new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
         img.onload = () => resolve(img);
-        img.onerror = reject;
+        img.onerror = () => reject(new Error("Could not load the background image"));
         img.src = url;
+      }).catch((err) => {
+        imageCache.delete(url);
+        throw err;
       })
     );
   }
@@ -62,6 +76,10 @@ function useEngine() {
   return useSyncExternalStore(subscribeEngine, getEngineStatus, getEngineStatus);
 }
 
+function useQualityTier() {
+  return useSyncExternalStore(subscribeQualityTier, getQualityTier, getQualityTier);
+}
+
 function sameBg(a: Background, b: Background) {
   if (a.kind !== b.kind) return false;
   if (a.kind === "color" && b.kind === "color") return a.color === b.color;
@@ -71,24 +89,48 @@ function sameBg(a: Background, b: Background) {
 }
 
 export default function EditorModal() {
-  const { items, activeId, setActive, setOpen, patch, touch, removeItem, retry, pickFiles } = useRemover();
+  const { items, activeId, setActive, setOpen, patch, touch, removeItem, retry, reprocess, applyRefine, pickFiles } =
+    useRemover();
   const item = items.find((i) => i.id === activeId) ?? items[0];
   const [tab, setTab] = useState<"bg" | "brush">("bg");
   const [mode, setMode] = useState<StageMode>("view");
   const [brushMode, setBrushMode] = useState<"erase" | "restore">("erase");
   const [brush, setBrush] = useState(36);
   const [busy, setBusy] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<{ itemId: string; message: string } | null>(null);
+  const [caps, setCaps] = useState<EngineCapabilities | null>(null);
+  const backgroundRequest = useRef(0);
   const engine = useEngine();
+  const qualityTier = useQualityTier();
   const { ui } = useI18n();
   const t = ui.editor;
+
+  useEffect(() => {
+    let active = true;
+    detectCapabilities()
+      .then((c) => {
+        if (active) setCaps(c);
+      })
+      .catch(() => {
+        if (active) setCaps({ webgpu: false, shaderF16: false, maxStorageBuffers: 0 });
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const stageMode: StageMode = tab === "brush" ? brushMode : mode;
   const done = item?.status === "done";
 
   const close = useCallback(() => setOpen(false), [setOpen]);
 
+  // An old image load must not replace a newer choice or a different item's background.
+  useEffect(() => () => { backgroundRequest.current++; }, [item?.id]);
+
   const setBg = (bg: Background) => {
     if (!item) return;
+    backgroundRequest.current++;
+    setFeedback(null);
     patch(item.id, { bg });
   };
 
@@ -110,19 +152,24 @@ export default function EditorModal() {
     const history = item.history.slice(0, -1);
     const snap = item.history[item.history.length - 1];
     item.mask.getContext("2d")!.putImageData(snap, 0, 0);
-    updateCut(item.cut, item.original, item.mask);
+    updateCut(item.cut, item.original, item.mask, undefined, item.foreground);
     patch(item.id, { history, resultThumb: thumbnail(item.cut), version: item.version + 1 });
   }, [item, patch]);
 
   const resetMask = () => {
-    if (!item?.raw || !item.original || !item.cut) return;
+    if (!item?.raw || !item.original || !item.cut || !item.mask) return;
     snapshot();
-    const fresh = buildMask(item.raw, item.width, item.height);
-    const ctx = item.mask!.getContext("2d")!;
-    ctx.globalCompositeOperation = "copy";
-    ctx.drawImage(fresh, 0, 0);
-    ctx.globalCompositeOperation = "source-over";
-    updateCut(item.cut, item.original, item.mask!);
+    const fresh = buildMask(item.raw, item.width, item.height, item.original, item.refine);
+    try {
+      const ctx = item.mask.getContext("2d")!;
+      ctx.globalCompositeOperation = "copy";
+      ctx.drawImage(fresh, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+    } finally {
+      releaseCanvas(fresh);
+    }
+    updateCut(item.cut, item.original, item.mask, undefined, item.foreground);
+    patch(item.id, { resultThumb: thumbnail(item.cut) });
     touch(item.id);
   };
 
@@ -146,10 +193,13 @@ export default function EditorModal() {
   const download = async (format: ExportFormat) => {
     if (!item?.cut || !item.original) return;
     setBusy(format);
+    setFeedback(null);
     try {
       const blob = await exportImage(item.original, item.cut, item.bg, format);
       downloadBlob(blob, `${baseName(item.name)}-bgremove.${format}`);
       track("download", { format, bg: item.bg.kind, edited: item.history.length > 0 });
+    } catch {
+      setFeedback({ itemId: item.id, message: t.downloadFailed });
     } finally {
       setBusy(null);
     }
@@ -157,8 +207,9 @@ export default function EditorModal() {
 
   const downloadAll = async () => {
     const ready = items.filter((i) => i.status === "done" && i.cut && i.original);
-    if (!ready.length) return;
+    if (!item || !ready.length) return;
     setBusy("zip");
+    setFeedback(null);
     try {
       const files: Record<string, [Uint8Array, { level: 0 }]> = {};
       const used = new Set<string>();
@@ -172,26 +223,52 @@ export default function EditorModal() {
       const zip = zipSync(files);
       downloadBlob(new Blob([zip as BlobPart], { type: "application/zip" }), `bgremove-${ready.length}-images.zip`);
       track("download_zip", { count: ready.length });
+    } catch {
+      setFeedback({ itemId: item.id, message: t.downloadFailed });
     } finally {
       setBusy(null);
     }
   };
 
   const applyPhoto = async (url: string) => {
-    const image = await loadImg(url);
-    setBg({ kind: "image", image, url });
+    if (!item) return;
+    const request = ++backgroundRequest.current;
+    setFeedback(null);
+    try {
+      const image = await loadImg(url);
+      if (request === backgroundRequest.current) patch(item.id, { bg: { kind: "image", image, url } });
+    } catch {
+      if (request === backgroundRequest.current) setFeedback({ itemId: item.id, message: t.backgroundFailed });
+    }
   };
 
   const uploadBg = () => {
+    if (!item) return;
+    const request = ++backgroundRequest.current;
+    setFeedback(null);
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = "image/*";
+    input.accept = "image/*,.heic,.heif";
     input.onchange = async () => {
       const f = input.files?.[0];
-      if (!f) return;
-      const url = URL.createObjectURL(f);
-      const image = await loadImg(url);
-      setBg({ kind: "image", image, url });
+      if (!f || request !== backgroundRequest.current) return;
+      try {
+        // Reuse foreground decoding, including HEIC conversion and canvas size limits.
+        const { canvas } = await decodeImage(f, f.name);
+        let image: ImageBitmap;
+        try {
+          image = await createImageBitmap(canvas);
+        } finally {
+          releaseCanvas(canvas);
+        }
+        if (request !== backgroundRequest.current) {
+          image.close();
+          return;
+        }
+        patch(item.id, { bg: { kind: "image", image, url: `upload:${request}` } });
+      } catch {
+        if (request === backgroundRequest.current) setFeedback({ itemId: item.id, message: t.backgroundFailed });
+      }
     };
     input.click();
   };
@@ -201,6 +278,27 @@ export default function EditorModal() {
   const doneCount = items.filter((i) => i.status === "done").length;
   const loadingModel = engine.state === "loading" && item.status !== "done" && item.status !== "error";
   const pct = engine.state === "loading" && engine.total ? Math.round((engine.loaded / engine.total) * 100) : 0;
+
+  const ultraSupported = Boolean(caps?.webgpu && caps.shaderF16 && caps.maxStorageBuffers >= 7);
+  const activeTier: QualityTier = item.status === "done" && item.tier ? item.tier : qualityTier;
+  const defringeEnabled = item.refine.defringe !== false;
+  const defringeStrength = item.refine.defringeStrength ?? 0.9;
+  const guidedEnabled = item.refine.guidedRefine !== false;
+
+  const selectTier = (nextTier: QualityTier) => {
+    if (nextTier === "ultra" && !ultraSupported) return;
+    if (nextTier === activeTier && item.status !== "error") return;
+    setQualityTier(nextTier);
+    if (item.status === "done" || item.status === "error") {
+      reprocess(item.id, nextTier);
+    }
+  };
+
+  const tierLabel = (tier?: QualityTier) =>
+    tier === "ultra" ? t.qualityUltra : tier === "fast" ? t.qualityFast : tier === "hd" ? t.qualityHd : null;
+  const deviceRaw = item.device ?? (engine.state === "ready" ? engine.device : undefined);
+  const deviceLabel = deviceRaw === "webgpu" ? "GPU" : deviceRaw === "wasm" ? "CPU" : null;
+  const footerTierLabel = tierLabel(item.tier ?? (engine.state === "ready" ? engine.tier : undefined));
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col bg-white" role="dialog" aria-modal="true" aria-label="Background remover editor">
@@ -227,9 +325,9 @@ export default function EditorModal() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
         {/* Stage */}
-        <section className="relative flex min-h-[42vh] flex-1 flex-col bg-mist">
+        <section className="relative flex h-[42vh] shrink-0 flex-col bg-mist lg:h-auto lg:min-h-0 lg:flex-1">
           <div className="flex items-center justify-center gap-2 px-3 pt-3">
             {tab === "bg" ? (
               <div className="inline-flex rounded-full bg-white p-1 shadow-card">
@@ -350,8 +448,8 @@ export default function EditorModal() {
         </section>
 
         {/* Side panel */}
-        <aside className="flex w-full shrink-0 flex-col border-line bg-white lg:w-[360px] lg:border-l">
-          <div className="space-y-2 border-b border-line p-4">
+        <aside className="flex min-h-0 w-full flex-1 flex-col border-line bg-white lg:w-[360px] lg:flex-none lg:border-l">
+          <div className="shrink-0 space-y-2 border-b border-line p-4">
             <button
               disabled={!done || !!busy}
               onClick={() => download("png")}
@@ -380,9 +478,45 @@ export default function EditorModal() {
                 {busy === "zip" ? t.zipping : fmt(t.zip, { done: doneCount, total: items.length })}
               </button>
             )}
+            {feedback?.itemId === item.id && (
+              <p role="alert" className="text-center text-xs text-pop">{feedback.message}</p>
+            )}
           </div>
 
-          <div className="flex border-b border-line px-4">
+          <div className="shrink-0 border-b border-line px-4 py-2.5">
+            <span className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-ink-mute">{t.quality}</span>
+            <div className="grid grid-cols-3 gap-1 rounded-xl bg-mist p-1" role="radiogroup" aria-label={t.quality}>
+              {([
+                ["fast", t.qualityFast],
+                ["hd", t.qualityHd],
+                ["ultra", t.qualityUltra],
+              ] as const).map(([tier, label]) => {
+                const selected = activeTier === tier;
+                const disabled = tier === "ultra" && !ultraSupported;
+                return (
+                  <button
+                    key={tier}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    disabled={disabled}
+                    onClick={() => selectTier(tier)}
+                    title={disabled ? t.qualityGpuOnly : undefined}
+                    className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+                      selected ? "bg-white text-ink shadow-sm" : "text-ink-soft hover:text-ink"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {caps !== null && !ultraSupported && (
+              <p className="mt-1.5 text-[11px] leading-snug text-ink-mute">{t.qualityGpuOnly}</p>
+            )}
+          </div>
+
+          <div className="flex shrink-0 border-b border-line px-4">
             {([
               ["bg", t.tabBg],
               ["brush", t.tabBrush],
@@ -397,7 +531,7 @@ export default function EditorModal() {
             ))}
           </div>
 
-          <div className={`flex-1 overflow-y-auto p-4 ${!done ? "pointer-events-none opacity-50" : ""}`}>
+          <div className={`min-h-0 flex-1 overflow-y-auto p-4 ${!done ? "pointer-events-none opacity-50" : ""}`}>
             {tab === "bg" ? (
               <div className="space-y-5">
                 <div>
@@ -502,6 +636,83 @@ export default function EditorModal() {
               </div>
             ) : (
               <div className="space-y-5">
+                <div className="space-y-3 rounded-xl border border-line p-3">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-ink-mute">{t.edgeRefine}</h3>
+
+                  <label className="flex cursor-pointer items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-ink">{t.defringe}</span>
+                      <span className="block text-xs text-ink-mute">{t.defringeHint}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={defringeEnabled}
+                      onChange={(e) => applyRefine(item.id, { ...item.refine, defringe: e.target.checked })}
+                      className="peer sr-only"
+                    />
+                    <span
+                      aria-hidden
+                      className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-1 ${
+                        defringeEnabled ? "bg-brand" : "bg-line"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                          defringeEnabled ? "translate-x-[18px]" : "translate-x-[2px]"
+                        }`}
+                      />
+                    </span>
+                  </label>
+
+                  {defringeEnabled && (
+                    <div className="pt-0.5">
+                      <label className="flex items-center justify-between text-xs font-semibold text-ink-soft">
+                        <span>{t.defringeStrength}</span>
+                        <span>{Math.round(defringeStrength * 100)}%</span>
+                      </label>
+                      <input
+                        type="range"
+                        min={0.2}
+                        max={1}
+                        step={0.05}
+                        value={defringeStrength}
+                        aria-label={t.defringeStrength}
+                        onChange={(e) =>
+                          applyRefine(item.id, { ...item.refine, defringeStrength: Number(e.target.value) })
+                        }
+                        className="slider mt-1.5 w-full"
+                      />
+                    </div>
+                  )}
+
+                  <div className="h-px bg-line" />
+
+                  <label className="flex cursor-pointer items-start justify-between gap-3">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold text-ink">{t.guidedEdges}</span>
+                      <span className="block text-xs text-ink-mute">{t.guidedEdgesHint}</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={guidedEnabled}
+                      onChange={(e) => applyRefine(item.id, { ...item.refine, guidedRefine: e.target.checked })}
+                      className="peer sr-only"
+                    />
+                    <span
+                      aria-hidden
+                      className={`relative mt-0.5 inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand peer-focus-visible:ring-offset-1 ${
+                        guidedEnabled ? "bg-brand" : "bg-line"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                          guidedEnabled ? "translate-x-[18px]" : "translate-x-[2px]"
+                        }`}
+                      />
+                    </span>
+                  </label>
+                </div>
+
                 <div className="grid grid-cols-2 gap-2">
                   {(["erase", "restore"] as const).map((m) => (
                     <button
@@ -534,10 +745,18 @@ export default function EditorModal() {
           </div>
 
           {item.ms !== undefined && (
-            <p className="border-t border-line px-4 py-2 text-[11px] text-ink-mute">
-              {fmt(t.processedIn, { s: (item.ms / 1000).toFixed(1) })}
-              {engine.state === "ready" && ` · ${engine.device === "webgpu" ? "GPU" : "CPU"}`}
-            </p>
+            <div className="flex shrink-0 flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-line px-4 py-2 text-[11px] text-ink-mute">
+              <span>
+                {fmt(t.processedIn, { s: (item.ms / 1000).toFixed(1) })}
+                {deviceLabel && ` · ${deviceLabel}`}
+                {footerTierLabel && ` · ${footerTierLabel}`}
+              </span>
+              {item.passes === 2 && (
+                <span className="rounded-full bg-brand-soft px-1.5 py-0.5 text-[10px] font-semibold text-brand">
+                  {t.twoPass}
+                </span>
+              )}
+            </div>
           )}
         </aside>
       </div>

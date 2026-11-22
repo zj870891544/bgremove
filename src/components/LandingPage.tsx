@@ -68,7 +68,7 @@ export default function LandingPage({ content, locale = "en", label }: { content
       "@type": "BreadcrumbList",
       itemListElement: [
         { "@type": "ListItem", position: 1, name: "BGRemove", item: homeUrl },
-        { "@type": "ListItem", position: 2, name: pageLabel[content.slug], item: url },
+        { "@type": "ListItem", position: 2, name: pageName, item: url },
       ],
     });
   }

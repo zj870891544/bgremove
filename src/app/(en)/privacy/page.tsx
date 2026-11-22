@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function Privacy() {
   return (
-    <TextPage title="Privacy Policy" updated="October 25, 2026">
+    <TextPage title="Privacy Policy" updated="October 26, 2026">
       <p>
         This policy explains what information {site.domain} (&quot;BGRemove&quot;, &quot;we&quot;) handles when you use the website.
       </p>
@@ -26,10 +26,15 @@ export default function Privacy() {
         Hugging Face and jsDelivr). Those providers receive standard request data like your IP address and user agent, as with any web request.
         The files are cached in your browser for later visits.
       </p>
-      <h2>Analytics and advertising</h2>
+      <h2>Usage analytics</h2>
       <p>
-        We may use privacy-respecting analytics (for example Google Analytics) to understand aggregate usage such as page views and device types.
-        If we show ads, ad partners may use cookies to serve and measure ads. You can block cookies in your browser settings at any time.
+        We use Google Analytics 4 to understand page views, referral sources, browser and device types, and interactions such as adding an image,
+        completing background removal and downloading a result. Analytics events do not include your images, image contents or file names.
+        Google Analytics may use cookies and receives standard web request information. Google signals and advertising personalization are disabled.
+      </p>
+      <p>
+        You can restrict cookies or block analytics in your browser. For details about Google&apos;s handling of data, see the{" "}
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Google Privacy Policy</a>.
       </p>
       <h2>Children</h2>
       <p>The service is not directed at children under 13 and we do not knowingly collect their personal information.</p>

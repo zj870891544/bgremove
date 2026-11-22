@@ -6,13 +6,12 @@ import { site } from "@/lib/site";
 export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
+  // Omit lastModified until we track content edits; a rebuild is not a page update.
   const languages = pageAlternates("", site.url);
   const homes = [
-    { url: site.url, lastModified, changeFrequency: "weekly" as const, priority: 1, alternates: { languages } },
+    { url: site.url, changeFrequency: "weekly" as const, priority: 1, alternates: { languages } },
     ...nonDefaultLocales.map((code) => ({
       url: `${site.url}/${code}`,
-      lastModified,
       changeFrequency: "weekly" as const,
       priority: 0.9,
       alternates: { languages },
@@ -22,7 +21,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     .filter((p) => p.slug)
     .map((p) => ({
       url: `${site.url}/${p.slug}`,
-      lastModified,
       changeFrequency: "weekly" as const,
       priority: 0.9,
       ...(isLocalizedSlug(p.slug) ? { alternates: { languages: pageAlternates(p.slug, site.url) } } : {}),
@@ -30,7 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const localizedTools = localizedSlugs.flatMap((slug) =>
     nonDefaultLocales.map((code) => ({
       url: `${site.url}/${code}/${slug}`,
-      lastModified,
       changeFrequency: "weekly" as const,
       priority: 0.8,
       alternates: { languages: pageAlternates(slug, site.url) },
@@ -38,7 +35,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   );
   const legal = ["about", "privacy", "terms"].map((s) => ({
     url: `${site.url}/${s}`,
-    lastModified,
     changeFrequency: "yearly" as const,
     priority: 0.3,
   }));

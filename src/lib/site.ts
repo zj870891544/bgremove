@@ -11,10 +11,16 @@ export const site = {
 
 /** Optional runtime knobs, all set at build time via NEXT_PUBLIC_* env vars. */
 export const engineConfig = {
-  /** High-quality model used when WebGPU is available. */
-  gpuModel: process.env.NEXT_PUBLIC_BG_GPU_MODEL || "onnx-community/BiRefNet_lite-ONNX",
-  /** Lighter model for CPU (WASM) and for GPUs that can't run the big one. */
-  cpuModel: process.env.NEXT_PUBLIC_BG_CPU_MODEL || "Ko033/isnet-general-use-onnx",
+  /** Default HD model used when WebGPU is available (1024x1024, <=7 buffers, 123.2MB fp16, MIT). */
+  gpuModel: process.env.NEXT_PUBLIC_BG_GPU_MODEL || "wonfy/BiRefNet_lite-ONNX-webgpu",
+  /** Lighter GPU fallback / Fast tier model (512x512, <=7 buffers, 98.5MB fp16, MIT). */
+  gpuFallbackModel: process.env.NEXT_PUBLIC_BG_GPU_FALLBACK_MODEL || "studioludens/birefnet-lite-512",
+  /** Ultra-precision full Swin-L BiRefNet 1024 model for WebGPU (<=7 buffers, 520.2MB fp16, MIT). */
+  gpuUltraModel: process.env.NEXT_PUBLIC_BG_ULTRA_MODEL || "wonfy/BiRefNet-ONNX-webgpu",
+  /** Preferred CPU/WASM model so foreground selection stays consistent across devices. */
+  cpuModel: process.env.NEXT_PUBLIC_BG_CPU_MODEL || "studioludens/birefnet-lite-512",
+  /** Last-resort model in a fresh worker if the preferred model fails or exhausts memory. */
+  cpuFallbackModel: process.env.NEXT_PUBLIC_BG_CPU_FALLBACK_MODEL || "Ko033/isnet-general-use-onnx",
   /** Mirror of the Hugging Face model files (e.g. your own R2/CDN bucket). Empty = huggingface.co. */
   modelHost: process.env.NEXT_PUBLIC_MODEL_HOST || "",
   transformersVersion: process.env.NEXT_PUBLIC_TRANSFORMERS_VERSION || "4.3.1",

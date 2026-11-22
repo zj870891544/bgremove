@@ -36,6 +36,7 @@ const id: LocaleBundle = {
       retry: "Coba lagi",
       download: "Unduh PNG HD",
       preparing: "Menyiapkan…",
+      downloadFailed: "Unduhan tidak dapat disiapkan. Silakan coba lagi.",
       fullRes: "Resolusi penuh {w} × {h} · gratis, tanpa watermark",
       notReady: "Tersedia setelah proses selesai",
       zip: "Unduh semua dalam ZIP ({done}/{total})",
@@ -47,6 +48,7 @@ const id: LocaleBundle = {
       gradients: "Gradasi",
       photos: "Foto",
       uploadBg: "Unggah",
+      backgroundFailed: "Latar ini tidak dapat dibuka. Coba lagi atau pilih gambar lain.",
       transparent: "Transparan",
       blur: "Blur foto asli",
       white: "Putih",
@@ -60,6 +62,18 @@ const id: LocaleBundle = {
       reset: "Kembali ke hasil AI",
       tip: "Tips: gambar yang samar adalah foto asli. Pakai Kembalikan untuk memunculkan bagian itu lagi, dan Hapus untuk membersihkan sisa. Tekan Ctrl/⌘ + Z untuk mengurungkan.",
       processedIn: "Diproses di perangkatmu dalam {s} dtk",
+      quality: "Kualitas AI",
+      qualityFast: "Cepat",
+      qualityHd: "HD",
+      qualityUltra: "Ultra",
+      qualityGpuOnly: "Ultra memerlukan browser dengan dukungan WebGPU.",
+      edgeRefine: "Penyempurnaan tepi",
+      defringe: "Hapus bias warna tepi",
+      defringeHint: "Bersihkan sisa warna latar pada rambut & tepi",
+      defringeStrength: "Kekuatan pembersihan",
+      guidedEdges: "Pertajam tepi mengikuti foto",
+      guidedEdgesHint: "Selaraskan mask secara presisi dengan tepi resolusi penuh",
+      twoPass: "Potong 2 tahap",
     },
     page: {
       badge: "Gratis · Tanpa daftar · Langsung di browser",
@@ -115,7 +129,7 @@ const id: LocaleBundle = {
     },
     steps: [
       { title: "Unggah gambar", text: "Klik Unggah gambar, seret file, tempel dengan Ctrl/⌘ + V, atau masukkan URL." },
-      { title: "AI menghapus background", text: "Model memisahkan objek dari background secara otomatis — biasanya dalam 1–3 detik." },
+      { title: "AI menghapus background", text: "Model memisahkan objek dari background secara otomatis. Waktu pemrosesan bergantung pada perangkatmu." },
       { title: "Edit & unduh", text: "Biarkan transparan atau pilih warna, blur, atau foto, lalu unduh PNG atau JPG HD." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const id: LocaleBundle = {
         heading: "Apa itu remove bg?",
         paragraphs: [
           "“Remove bg” adalah singkatan bahasa Inggris dari “remove background”, yaitu menghapus background gambar: objek utama tetap ada, sisanya jadi transparan. Hasilnya disimpan dalam format PNG yang mendukung transparansi, jadi potongan objek bisa ditaruh di atas warna atau foto apa pun tanpa kotak di sekelilingnya.",
-          "Melakukannya manual di Photoshop bisa memakan 10–30 menit untuk foto dengan rambut. Alat AI melakukan hal yang sama dalam sedetik dengan memprediksi setiap piksel apakah termasuk objek atau bukan.",
+          "Melakukannya manual di Photoshop bisa memakan 10–30 menit untuk foto dengan rambut. Alat AI mengotomatiskan pekerjaan ini dengan memprediksi setiap piksel apakah termasuk objek atau bukan.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const id: LocaleBundle = {
     faqs: [
       { q: "Apakah BGRemove benar-benar gratis?", a: "Ya. Menghapus background, mengedit hasil, dan mengunduh PNG resolusi penuh tidak dipungut biaya dan tidak perlu akun. Tanpa kredit, watermark, atau batas harian." },
       { q: "Apakah fotoku diunggah ke server?", a: "Tidak. Model AI diunduh sekali lalu berjalan di browsermu lewat WebGPU atau WebAssembly. Fotomu tidak pernah keluar dari perangkatmu." },
-      { q: "Kenapa gambar pertama lebih lama?", a: "Pertama kali, browser mengunduh model AI (sekitar 90–115 MB). Setelah itu tersimpan, dan setiap gambar diproses dalam beberapa detik, termasuk di kunjungan berikutnya." },
+      { q: "Kenapa gambar pertama lebih lama?", a: "Pertama kali, browser mengunduh model AI (sekitar 90–115 MB). Setelah itu model tersimpan untuk kunjungan berikutnya. Waktu pemrosesan bergantung pada perangkatmu." },
       { q: "Format apa saja yang didukung?", a: "JPG, PNG, WebP, AVIF, BMP, GIF, dan HEIC dari iPhone. Hasil diunduh sebagai PNG transparan, atau JPG dan WebP jika kamu menambahkan background." },
       { q: "Bisakah hasilnya dipakai untuk jualan?", a: "Bisa. Gambar yang kamu proses adalah milikmu: untuk toko online, iklan, atau proyek klien, selama kamu punya hak atas foto aslinya." },
       { q: "Bisa dipakai di HP?", a: "Bisa, di Chrome dan Safari untuk Android dan iPhone. Ketuk Unggah gambar, pilih foto dari galeri, lalu simpan hasilnya ke HP." },

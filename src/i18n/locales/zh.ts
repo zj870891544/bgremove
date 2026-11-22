@@ -36,6 +36,7 @@ const zh: LocaleBundle = {
       retry: "重试",
       download: "下载高清 PNG",
       preparing: "准备中…",
+      downloadFailed: "无法准备下载文件，请重试。",
       fullRes: "原始分辨率 {w} × {h} · 免费、无水印",
       notReady: "处理完成后即可下载",
       zip: "打包下载全部 ZIP（{done}/{total}）",
@@ -47,6 +48,7 @@ const zh: LocaleBundle = {
       gradients: "渐变",
       photos: "图片背景",
       uploadBg: "上传",
+      backgroundFailed: "无法打开这张背景图，请重试或选择其他图片。",
       transparent: "透明",
       blur: "虚化原背景",
       white: "白色",
@@ -60,6 +62,18 @@ const zh: LocaleBundle = {
       reset: "恢复为 AI 结果",
       tip: "提示：半透明显示的是原图。用「恢复」把部分区域涂回来，用「擦除」清理残留背景。按 Ctrl/⌘ + Z 撤销。",
       processedIn: "已在你的设备上处理，用时 {s} 秒",
+      quality: "AI 质量",
+      qualityFast: "快速",
+      qualityHd: "高清",
+      qualityUltra: "超清",
+      qualityGpuOnly: "超清模式需要支持 WebGPU 的浏览器。",
+      edgeRefine: "边缘精细化",
+      defringe: "去除边缘溢色",
+      defringeHint: "消除发丝与轮廓处残留的背景色边",
+      defringeStrength: "去溢色强度",
+      guidedEdges: "边缘贴合原图",
+      guidedEdgesHint: "将蒙版精准对齐到原图高清边缘",
+      twoPass: "双阶段精抠",
     },
     page: {
       badge: "免费 · 无需注册 · 浏览器本地运行",
@@ -115,7 +129,7 @@ const zh: LocaleBundle = {
     },
     steps: [
       { title: "上传图片", text: "点击「上传图片」、拖入文件、用 Ctrl/⌘ + V 粘贴，或输入图片链接。" },
-      { title: "AI 自动抠图", text: "模型自动把主体和背景分开，通常 1–3 秒完成。" },
+      { title: "AI 自动抠图", text: "模型自动把主体和背景分开，处理时间取决于你的设备。" },
       { title: "编辑并下载", text: "保持透明，或选择纯色、虚化、图片背景，然后下载高清 PNG 或 JPG。" },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const zh: LocaleBundle = {
         heading: "什么是「remove bg」？",
         paragraphs: [
           "「remove bg」是英文 remove background 的缩写，意思就是去除背景，也就是我们常说的「抠图」：保留主体，把其余部分变成透明。结果保存为支持透明通道的 PNG 格式，可以直接放到任何颜色或图片上，不会出现白框。",
-          "用 Photoshop 手动抠一张带头发的照片，往往要 10–30 分钟。AI 抠图工具通过逐个像素判断是否属于主体，一秒左右就能完成同样的工作。",
+          "用 Photoshop 手动抠一张带头发的照片，往往要 10–30 分钟。AI 抠图工具通过逐个像素判断是否属于主体，自动完成这项工作。",
         ],
       },
       {
@@ -142,7 +156,7 @@ const zh: LocaleBundle = {
     faqs: [
       { q: "BGRemove 真的免费吗？", a: "是的。抠图、编辑和下载原图分辨率的 PNG 全部免费，也不需要注册账号。没有积分、没有水印、没有每日次数限制。" },
       { q: "我的图片会上传到服务器吗？", a: "不会。AI 模型只需下载一次，之后通过 WebGPU 或 WebAssembly 在浏览器里运行，照片始终不会离开你的设备。" },
-      { q: "为什么第一张图片比较慢？", a: "第一次使用时，浏览器需要下载 AI 模型（约 90–115 MB）。之后会被缓存，以后再访问时每张图片几秒就能处理完。" },
+      { q: "为什么第一张图片比较慢？", a: "第一次使用时，浏览器需要下载 AI 模型（约 90–115 MB）。之后会被缓存，以后无需重复下载；每张图片的处理时间取决于设备性能。" },
       { q: "支持哪些图片格式？", a: "支持 JPG、PNG、WebP、AVIF、BMP、GIF 以及 iPhone 的 HEIC。结果可以下载为透明 PNG；添加背景后也可以下载 JPG 或 WebP。" },
       { q: "抠好的图可以商用吗？", a: "可以。你处理的图片归你所有，只要你拥有原图的使用权，就可以用于网店、广告或客户项目。" },
       { q: "手机上能用吗？", a: "可以，支持 iPhone 和安卓手机上的 Safari、Chrome 等浏览器。点击「上传图片」，从相册选择照片，再把结果保存到手机即可。" },

@@ -1,12 +1,54 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { type MaskResult, removeBackground, warmUp } from "@/lib/remover/engine";
-import { type Background, buildMask, decodeImage, isHeic, makeCanvas, releaseCanvas, thumbnail, updateCut } from "@/lib/remover/render";
+import {
+  type MaskResult,
+  type QualityTier,
+  getQualityTier,
+  removeBackground,
+  setQualityTier,
+  warmUp,
+} from "@/lib/remover/engine";
+import {
+  type Background,
+  type RefineOptions,
+  buildDecontaminatedForeground,
+  buildForegroundFromRgba,
+  buildMask,
+  decodeImage,
+  isHeic,
+  makeCanvas,
+  releaseCanvas,
+  thumbnail,
+  updateCut,
+} from "@/lib/remover/render";
 import { track } from "@/lib/analytics";
 import type { BgPreset } from "@/content/pages";
 import { useI18n } from "@/i18n/I18nProvider";
 import EditorModal from "./EditorModal";
+
+const DEFAULT_REFINE: RefineOptions = {
+  guidedRefine: true,
+  defringe: true,
+  defringeStrength: 0.9,
+  cleanAlpha: true,
+};
+
+type OwnedCanvases = {
+  original?: HTMLCanvasElement;
+  mask?: HTMLCanvasElement;
+  foreground?: HTMLCanvasElement | null;
+  cut?: HTMLCanvasElement;
+};
+
+function releaseLater(canvases: (HTMLCanvasElement | null | undefined)[], delay = 1000) {
+  const unique = new Set<HTMLCanvasElement>();
+  for (const c of canvases) {
+    if (c) unique.add(c);
+  }
+  if (!unique.size) return;
+  setTimeout(() => unique.forEach((c) => releaseCanvas(c)), delay);
+}
 
 export type Item = {
   id: string;
@@ -17,15 +59,21 @@ export type Item = {
   width: number;
   height: number;
   original?: HTMLCanvasElement;
-  /** The model's raw prediction, kept so "Reset to AI result" can rebuild the mask. */
+  /** The model's raw prediction, kept so "Reset to AI result" and edge refinement can rebuild the mask. */
   raw?: MaskResult;
   mask?: HTMLCanvasElement;
+  foreground?: HTMLCanvasElement | null;
   cut?: HTMLCanvasElement;
   thumb?: string;
   resultThumb?: string;
   bg: Background;
+  refine: RefineOptions;
   history: ImageData[];
   ms?: number;
+  passes?: number;
+  model?: string;
+  device?: string;
+  tier?: QualityTier;
   /** Bumped whenever canvases are mutated, so views know to repaint. */
   version: number;
 };
@@ -40,6 +88,8 @@ type Ctx = {
   addUrl: (url: string, preset?: BgPreset) => Promise<void>;
   removeItem: (id: string) => void;
   retry: (id: string) => void;
+  reprocess: (id: string, tier?: QualityTier) => void;
+  applyRefine: (id: string, nextRefine: RefineOptions) => void;
   patch: (id: string, p: Partial<Item>) => void;
   touch: (id: string) => void;
   pickFiles: (preset?: BgPreset) => void;
@@ -67,6 +117,9 @@ export default function RemoverProvider({ children }: { children: React.ReactNod
   const [activeId, setActiveId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const itemsRef = useRef<Item[]>([]);
+  const runTokenRef = useRef(new Map<string, number>());
+  const tokenSeqRef = useRef(0);
+  const ownedCanvasesRef = useRef(new Map<string, OwnedCanvases>());
   const inputRef = useRef<HTMLInputElement>(null);
   const presetRef = useRef<BgPreset | undefined>(undefined);
   const [dragging, setDragging] = useState(false);
@@ -85,25 +138,114 @@ export default function RemoverProvider({ children }: { children: React.ReactNod
   }, []);
 
   const process = useCallback(
-    async (id: string, file: Blob, name: string) => {
+    async (
+      id: string,
+      file: Blob,
+      name: string,
+      overrideTier?: QualityTier,
+      existingOriginal?: HTMLCanvasElement
+    ) => {
+      const token = ++tokenSeqRef.current;
+      runTokenRef.current.set(id, token);
       try {
-        const decoded = await decodeImage(file, name);
-        patch(id, {
-          status: "queued",
-          original: decoded.canvas,
-          width: decoded.width,
-          height: decoded.height,
-          thumb: thumbnail(decoded.canvas),
+        let originalCanvas: HTMLCanvasElement;
+        let width: number;
+        let height: number;
+        if (existingOriginal && existingOriginal.width > 0 && existingOriginal.height > 0) {
+          originalCanvas = existingOriginal;
+          width = existingOriginal.width;
+          height = existingOriginal.height;
+        } else {
+          const decoded = await decodeImage(file, name);
+          if (runTokenRef.current.get(id) !== token) {
+            releaseCanvas(decoded.canvas);
+            return;
+          }
+          originalCanvas = decoded.canvas;
+          width = decoded.width;
+          height = decoded.height;
+          const prev = ownedCanvasesRef.current.get(id);
+          ownedCanvasesRef.current.set(id, { ...prev, original: originalCanvas });
+          if (prev?.original && prev.original !== originalCanvas) {
+            releaseLater([prev.original]);
+          }
+          patch(id, {
+            status: "queued",
+            original: originalCanvas,
+            width,
+            height,
+            thumb: thumbnail(originalCanvas),
+          });
+        }
+
+        const tier = overrideTier ?? getQualityTier();
+        const bitmap = await createImageBitmap(originalCanvas);
+        if (runTokenRef.current.get(id) !== token) {
+          bitmap.close();
+          return;
+        }
+        patch(id, { status: "processing", error: undefined });
+        const result = await removeBackground(file, bitmap, { tier });
+        if (runTokenRef.current.get(id) !== token) return;
+
+        const current = itemsRef.current.find((it) => it.id === id);
+        const refine = current?.refine ?? DEFAULT_REFINE;
+        const mask = buildMask(result, width, height, originalCanvas, refine);
+        const foreground = result.rgba
+          ? refine.defringe === false
+            ? null
+            : buildForegroundFromRgba(result, width, height)
+          : buildDecontaminatedForeground(originalCanvas, mask, refine);
+        const cut = makeCanvas(width, height);
+        updateCut(cut, originalCanvas, mask, undefined, foreground);
+
+        const prev = ownedCanvasesRef.current.get(id);
+        ownedCanvasesRef.current.set(id, { original: originalCanvas, mask, foreground, cut });
+        const toRelease = [
+          prev?.mask,
+          prev?.foreground,
+          prev?.cut,
+          prev?.original,
+          current?.mask,
+          current?.foreground,
+          current?.cut,
+          current?.original,
+        ].filter((c) => c && c !== originalCanvas && c !== mask && c !== foreground && c !== cut);
+
+        const resultThumb = thumbnail(cut);
+        const resolvedTier = result.tier ?? tier;
+        setItems((list) =>
+          list.map((it) =>
+            it.id === id
+              ? {
+                  ...it,
+                  status: "done",
+                  error: undefined,
+                  raw: result,
+                  mask,
+                  foreground,
+                  cut,
+                  resultThumb,
+                  ms: result.ms,
+                  passes: result.passes,
+                  model: result.model,
+                  device: result.device,
+                  tier: resolvedTier,
+                  history: [],
+                  version: it.version + 1,
+                }
+              : it
+          )
+        );
+        releaseLater(toRelease);
+        track("bg_removed", {
+          ms: result.ms,
+          megapixels: Math.round((width * height) / 1e5) / 10,
+          tier: resolvedTier,
+          passes: result.passes ?? 1,
         });
-        const bitmap = await createImageBitmap(decoded.canvas);
-        patch(id, { status: "processing" });
-        const result = await removeBackground(file, bitmap);
-        const mask = buildMask(result, decoded.width, decoded.height);
-        const cut = makeCanvas(decoded.width, decoded.height);
-        updateCut(cut, decoded.canvas, mask);
-        patch(id, { status: "done", raw: result, mask, cut, resultThumb: thumbnail(cut), ms: result.ms });
-        track("bg_removed", { ms: result.ms, megapixels: Math.round((decoded.width * decoded.height) / 1e5) / 10 });
       } catch (err) {
+        if (runTokenRef.current.get(id) !== token) return;
         console.error(err);
         track("bg_remove_failed", { message: err instanceof Error ? err.message.slice(0, 100) : "unknown" });
         patch(id, {
@@ -132,6 +274,7 @@ export default function RemoverProvider({ children }: { children: React.ReactNod
         width: 0,
         height: 0,
         bg,
+        refine: { ...DEFAULT_REFINE },
         history: [],
         version: 0,
       }));
@@ -166,9 +309,21 @@ export default function RemoverProvider({ children }: { children: React.ReactNod
   );
 
   const removeItem = useCallback((id: string) => {
+    runTokenRef.current.delete(id);
+    const tracked = ownedCanvasesRef.current.get(id);
+    ownedCanvasesRef.current.delete(id);
     const gone = itemsRef.current.find((it) => it.id === id);
     // Free the canvases once the editor has stopped drawing them.
-    if (gone) setTimeout(() => [gone.original, gone.mask, gone.cut].forEach(releaseCanvas), 1000);
+    releaseLater([
+      gone?.original,
+      gone?.mask,
+      gone?.foreground,
+      gone?.cut,
+      tracked?.original,
+      tracked?.mask,
+      tracked?.foreground,
+      tracked?.cut,
+    ]);
     setItems((list) => {
       const next = list.filter((it) => it.id !== id);
       setActiveId((cur) => (cur === id ? (next[0]?.id ?? null) : cur));
@@ -181,10 +336,72 @@ export default function RemoverProvider({ children }: { children: React.ReactNod
     (id: string) => {
       const it = itemsRef.current.find((i) => i.id === id);
       if (!it) return;
-      patch(id, { status: "loading", error: undefined });
-      process(id, it.file, it.name);
+      const hasOriginal = Boolean(it.original && it.original.width > 0 && it.original.height > 0);
+      patch(id, { status: hasOriginal ? "processing" : "loading", error: undefined });
+      process(id, it.file, it.name, undefined, hasOriginal ? it.original : undefined);
     },
     [patch, process]
+  );
+
+  const reprocess = useCallback(
+    (id: string, tier?: QualityTier) => {
+      const it = itemsRef.current.find((i) => i.id === id);
+      if (!it) return;
+      if (tier) setQualityTier(tier);
+      const hasOriginal = Boolean(it.original && it.original.width > 0 && it.original.height > 0);
+      patch(id, { status: hasOriginal ? "processing" : "loading", error: undefined });
+      process(id, it.file, it.name, tier, hasOriginal ? it.original : undefined);
+    },
+    [patch, process]
+  );
+
+  const applyRefine = useCallback(
+    (id: string, nextRefine: RefineOptions) => {
+      const it = itemsRef.current.find((i) => i.id === id);
+      if (!it) return;
+      const merged: RefineOptions = { ...it.refine, ...nextRefine };
+      if (!it.raw || !it.original || !it.cut) {
+        patch(id, { refine: merged });
+        return;
+      }
+      const mask = buildMask(it.raw, it.width, it.height, it.original, merged);
+      const foreground = it.raw.rgba
+        ? merged.defringe === false
+          ? null
+          : buildForegroundFromRgba(it.raw, it.width, it.height)
+        : buildDecontaminatedForeground(it.original, mask, merged);
+      updateCut(it.cut, it.original, mask, undefined, foreground);
+
+      const prev = ownedCanvasesRef.current.get(id);
+      ownedCanvasesRef.current.set(id, {
+        original: it.original,
+        mask,
+        foreground,
+        cut: it.cut,
+      });
+      const toRelease = [prev?.mask, prev?.foreground, it.mask, it.foreground].filter(
+        (c) => c && c !== mask && c !== foreground
+      );
+
+      const resultThumb = thumbnail(it.cut);
+      setItems((list) =>
+        list.map((cur) =>
+          cur.id === id
+            ? {
+                ...cur,
+                refine: merged,
+                mask,
+                foreground,
+                resultThumb,
+                history: [],
+                version: cur.version + 1,
+              }
+            : cur
+        )
+      );
+      releaseLater(toRelease, 200);
+    },
+    [patch]
   );
 
   const pickFiles = useCallback((preset?: BgPreset) => {
@@ -274,12 +491,14 @@ export default function RemoverProvider({ children }: { children: React.ReactNod
       addUrl,
       removeItem,
       retry,
+      reprocess,
+      applyRefine,
       patch,
       touch,
       pickFiles,
       setPreset,
     }),
-    [items, activeId, open, addFiles, addUrl, removeItem, retry, patch, touch, pickFiles, setPreset]
+    [items, activeId, open, addFiles, addUrl, removeItem, retry, reprocess, applyRefine, patch, touch, pickFiles, setPreset]
   );
 
   return (

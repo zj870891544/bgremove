@@ -36,6 +36,7 @@ const fr: LocaleBundle = {
       retry: "Réessayer",
       download: "Télécharger le PNG HD",
       preparing: "Préparation…",
+      downloadFailed: "Impossible de préparer le téléchargement. Réessayez.",
       fullRes: "Pleine résolution {w} × {h} · gratuit, sans filigrane",
       notReady: "Disponible à la fin du traitement",
       zip: "Tout télécharger en ZIP ({done}/{total})",
@@ -47,6 +48,7 @@ const fr: LocaleBundle = {
       gradients: "Dégradés",
       photos: "Photos",
       uploadBg: "Importer",
+      backgroundFailed: "Impossible d’ouvrir cet arrière-plan. Réessayez ou choisissez une autre image.",
       transparent: "Transparent",
       blur: "Flouter l'original",
       white: "Blanc",
@@ -60,6 +62,18 @@ const fr: LocaleBundle = {
       reset: "Revenir au résultat de l'IA",
       tip: "Astuce : l'image estompée correspond à la photo d'origine. Utilisez Restaurer pour récupérer des zones et Effacer pour nettoyer les restes. Ctrl/⌘ + Z pour annuler.",
       processedIn: "Traité sur votre appareil en {s} s",
+      quality: "Qualité IA",
+      qualityFast: "Rapide",
+      qualityHd: "HD",
+      qualityUltra: "Ultra",
+      qualityGpuOnly: "Ultra nécessite un navigateur compatible avec WebGPU.",
+      edgeRefine: "Affinage des contours",
+      defringe: "Supprimer les franges de couleur",
+      defringeHint: "Nettoie les reflets du fond sur les cheveux et contours",
+      defringeStrength: "Intensité anti-franges",
+      guidedEdges: "Affiner les bords sur la photo",
+      guidedEdgesHint: "Aligne le masque avec précision sur les contours haute résolution",
+      twoPass: "Recadrage 2 passes",
     },
     page: {
       badge: "Gratuit · Sans inscription · Dans votre navigateur",
@@ -115,7 +129,7 @@ const fr: LocaleBundle = {
     },
     steps: [
       { title: "Importez votre image", text: "Cliquez sur Importer une image, déposez un fichier, collez-le avec Ctrl/⌘ + V ou saisissez une URL." },
-      { title: "L'IA supprime le fond", text: "Le modèle sépare le sujet de l'arrière-plan automatiquement, en général en 1 à 3 secondes." },
+      { title: "L'IA supprime le fond", text: "Le modèle sépare automatiquement le sujet de l'arrière-plan. Le temps de traitement dépend de votre appareil." },
       { title: "Modifiez et téléchargez", text: "Gardez la transparence ou choisissez une couleur, un flou ou une photo, puis téléchargez le PNG ou JPG HD." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const fr: LocaleBundle = {
         heading: "Que veut dire « remove bg » ?",
         paragraphs: [
           "« Remove bg » est l'abréviation anglaise de « supprimer l'arrière-plan » : garder le sujet et rendre tout le reste transparent. Le résultat est enregistré en PNG, un format qui gère la transparence, pour poser le détourage sur n'importe quelle couleur ou photo sans cadre visible.",
-          "Détourer à la main dans Photoshop peut prendre 10 à 30 minutes pour une photo avec des cheveux. Un outil de détourage par IA fait la même chose en une seconde en prédisant, pixel par pixel, ce qui appartient au sujet.",
+          "Détourer à la main dans Photoshop peut prendre 10 à 30 minutes pour une photo avec des cheveux. Un outil de détourage par IA automatise ce travail en prédisant, pixel par pixel, ce qui appartient au sujet.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const fr: LocaleBundle = {
     faqs: [
       { q: "BGRemove est-il vraiment gratuit ?", a: "Oui. Supprimer le fond, retoucher le détourage et télécharger le PNG en pleine résolution ne coûte rien et ne nécessite aucun compte. Pas de crédits, pas de filigrane, pas de limite quotidienne." },
       { q: "Mes images sont-elles envoyées sur un serveur ?", a: "Non. Le modèle d'IA est téléchargé une fois puis s'exécute dans votre navigateur via WebGPU ou WebAssembly. Vos photos ne quittent jamais votre appareil." },
-      { q: "Pourquoi la première image est-elle plus lente ?", a: "La première fois, le navigateur télécharge le modèle d'IA (environ 90 à 115 Mo). Il est ensuite mis en cache et chaque image est traitée en quelques secondes, y compris lors de vos prochaines visites." },
+      { q: "Pourquoi la première image est-elle plus lente ?", a: "La première fois, le navigateur télécharge le modèle d'IA (environ 90 à 115 Mo). Il est ensuite mis en cache pour vos prochaines visites. Le temps de traitement dépend de votre appareil." },
       { q: "Quels formats sont acceptés ?", a: "JPG, PNG, WebP, AVIF, BMP, GIF et HEIC (iPhone). Le résultat se télécharge en PNG transparent, ou en JPG et WebP si vous ajoutez un fond." },
       { q: "Puis-je utiliser les résultats à des fins commerciales ?", a: "Oui. Les images traitées vous appartiennent : boutique en ligne, publicités, projets clients… tant que vous disposez des droits sur la photo d'origine." },
       { q: "Est-ce que ça marche sur mobile ?", a: "Oui, dans Safari et Chrome sur iPhone et Android. Touchez Importer une image, choisissez une photo de la galerie et enregistrez le résultat sur votre téléphone." },

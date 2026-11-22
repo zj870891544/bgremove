@@ -36,6 +36,7 @@ const tr: LocaleBundle = {
       retry: "Tekrar dene",
       download: "HD PNG indir",
       preparing: "Hazırlanıyor…",
+      downloadFailed: "İndirme hazırlanamadı. Lütfen tekrar deneyin.",
       fullRes: "Tam çözünürlük {w} × {h} · ücretsiz, filigransız",
       notReady: "İşlem bitince kullanılabilir",
       zip: "Tümünü ZIP olarak indir ({done}/{total})",
@@ -47,6 +48,7 @@ const tr: LocaleBundle = {
       gradients: "Geçişler",
       photos: "Fotoğraflar",
       uploadBg: "Yükle",
+      backgroundFailed: "Bu arka plan açılamadı. Tekrar deneyin veya başka bir görsel seçin.",
       transparent: "Şeffaf",
       blur: "Orijinali bulanıklaştır",
       white: "Beyaz",
@@ -60,6 +62,18 @@ const tr: LocaleBundle = {
       reset: "Yapay zekâ sonucuna dön",
       tip: "İpucu: soluk görünen resim orijinal fotoğraftır. Geri getir ile parçaları geri boyayın, Sil ile kalıntıları temizleyin. Geri almak için Ctrl/⌘ + Z.",
       processedIn: "Cihazınızda {s} sn'de işlendi",
+      quality: "Yapay zekâ kalitesi",
+      qualityFast: "Hızlı",
+      qualityHd: "HD",
+      qualityUltra: "Ultra",
+      qualityGpuOnly: "Ultra modu WebGPU destekleyen bir tarayıcı gerektirir.",
+      edgeRefine: "Kenar iyileştirme",
+      defringe: "Renk halesini kaldır",
+      defringeHint: "Saç ve kenarlardaki arka plan renk sızıntısını temizle",
+      defringeStrength: "Hale giderme gücü",
+      guidedEdges: "Kenarları fotoğrafa hizala",
+      guidedEdgesHint: "Maskeyi tam çözünürlüklü kenarlara hassasça oturt",
+      twoPass: "2 aşamalı kırpma",
     },
     page: {
       badge: "Ücretsiz · Kayıt yok · Tarayıcınızda çalışır",
@@ -115,7 +129,7 @@ const tr: LocaleBundle = {
     },
     steps: [
       { title: "Resmi yükleyin", text: "Resim yükle'ye tıklayın, dosyayı sürükleyin, Ctrl/⌘ + V ile yapıştırın veya URL girin." },
-      { title: "Yapay zekâ arka planı kaldırır", text: "Model nesneyi arka plandan otomatik olarak ayırır — genellikle 1–3 saniyede." },
+      { title: "Yapay zekâ arka planı kaldırır", text: "Model nesneyi arka plandan otomatik olarak ayırır. İşlem süresi cihazınıza bağlıdır." },
       { title: "Düzenleyin ve indirin", text: "Şeffaf bırakın ya da renk, bulanıklık veya fotoğraf seçin; HD PNG veya JPG olarak indirin." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const tr: LocaleBundle = {
         heading: "“Remove bg” ne demek?",
         paragraphs: [
           "“Remove bg”, İngilizcede “arka planı kaldır” ifadesinin kısaltmasıdır: nesne kalır, geri kalan her şey şeffaf olur. Sonuç, şeffaflığı destekleyen PNG formatında kaydedilir; böylece kesilen nesneyi görünür bir çerçeve olmadan her renge veya fotoğrafa yerleştirebilirsiniz.",
-          "Photoshop'ta elle yapmak, saçlı bir fotoğrafta 10–30 dakika sürebilir. Yapay zekâ aracı aynı işi, her pikselin nesneye ait olup olmadığını tahmin ederek bir saniyede yapar.",
+          "Photoshop'ta elle yapmak, saçlı bir fotoğrafta 10–30 dakika sürebilir. Yapay zekâ aracı, her pikselin nesneye ait olup olmadığını tahmin ederek bu işi otomatikleştirir.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const tr: LocaleBundle = {
     faqs: [
       { q: "BGRemove gerçekten ücretsiz mi?", a: "Evet. Arka planı kaldırmak, sonucu düzenlemek ve tam çözünürlüklü PNG indirmek ücretsizdir ve hesap gerektirmez. Kredi, filigran veya günlük sınır yoktur." },
       { q: "Resimlerim bir sunucuya yükleniyor mu?", a: "Hayır. Yapay zekâ modeli bir kez indirilir ve WebGPU veya WebAssembly ile tarayıcınızda çalışır. Fotoğraflarınız cihazınızdan hiç çıkmaz." },
-      { q: "İlk resim neden daha uzun sürüyor?", a: "İlk seferde tarayıcı yapay zekâ modelini indirir (yaklaşık 90–115 MB). Sonra önbelleğe alınır ve sonraki ziyaretlerde de her resim birkaç saniyede işlenir." },
+      { q: "İlk resim neden daha uzun sürüyor?", a: "İlk seferde tarayıcı yapay zekâ modelini indirir (yaklaşık 90–115 MB). Sonraki ziyaretler için önbelleğe alınır. İşlem süresi cihazınıza bağlıdır." },
       { q: "Hangi formatlar destekleniyor?", a: "JPG, PNG, WebP, AVIF, BMP, GIF ve iPhone HEIC. Sonuç şeffaf PNG olarak; arka plan eklerseniz JPG ve WebP olarak da indirilebilir." },
       { q: "Sonuçları ticari amaçla kullanabilir miyim?", a: "Evet. İşlediğiniz resimler sizindir: mağazalar, reklamlar ve müşteri projeleri — orijinal fotoğrafın haklarına sahip olduğunuz sürece." },
       { q: "Telefonda çalışıyor mu?", a: "Evet, iPhone ve Android'de Safari ve Chrome ile. Resim yükle'ye dokunun, galeriden bir fotoğraf seçin ve sonucu telefonunuza kaydedin." },

@@ -19,8 +19,8 @@ export default function About() {
       </p>
       <h2>How it works</h2>
       <p>
-        When you open the tool, your browser downloads an open-source segmentation model — BiRefNet (MIT) on capable GPUs, IS-Net (Apache-2.0)
-        everywhere else — and runs it locally using WebGPU or WebAssembly through Transformers.js and ONNX Runtime. The model predicts a transparency mask for your photo, which we apply to
+        Your browser downloads a BiRefNet model and runs it locally using WebGPU or WebAssembly through
+        Transformers.js and ONNX Runtime. HD is the desktop default, while phones use the lighter Fast model. You can also choose Ultra on supported devices. If a model fails, the tool retries with a lighter model. The model predicts a transparency mask for your photo, which we apply to
         the original pixels so your download keeps its full resolution.
       </p>
       <h2>What it costs</h2>

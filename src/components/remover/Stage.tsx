@@ -91,7 +91,7 @@ export default function Stage({ item, mode, brush, onStrokeStart, onStrokeEnd }:
   };
 
   const strokeTo = (to: { x: number; y: number }) => {
-    const { mask, cut, original } = item;
+    const { mask, cut, original, foreground } = item;
     if (!mask || !cut || !original) return;
     const from = drawing.current ?? to;
     const radius = brush / 2 / scale;
@@ -115,7 +115,7 @@ export default function Stage({ item, mode, brush, onStrokeStart, onStrokeEnd }:
       w: Math.ceil(Math.abs(to.x - from.x) + pad * 2),
       h: Math.ceil(Math.abs(to.y - from.y) + pad * 2),
     };
-    updateCut(cut, original, mask, rect);
+    updateCut(cut, original, mask, rect, foreground);
     drawing.current = to;
     cancelAnimationFrame(raf.current);
     raf.current = requestAnimationFrame(paint);
@@ -192,8 +192,8 @@ export default function Stage({ item, mode, brush, onStrokeStart, onStrokeEnd }:
               <div className="absolute top-1/2 -ml-5 -mt-5 flex h-10 w-10 items-center justify-center rounded-full bg-white text-ink shadow-card">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6-6 6 6 6M15 6l6 6-6 6" /></svg>
               </div>
-              <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{ui.editor.after}</span>
-              <span className="absolute right-3 top-3 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{ui.editor.before}</span>
+              <span className="absolute left-3 top-3 whitespace-nowrap rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{ui.editor.after}</span>
+              <span className="absolute right-3 top-3 whitespace-nowrap rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{ui.editor.before}</span>
             </div>
           )}
           {brushing && cursor && (

@@ -36,6 +36,7 @@ const vi: LocaleBundle = {
       retry: "Thử lại",
       download: "Tải PNG HD",
       preparing: "Đang chuẩn bị…",
+      downloadFailed: "Không thể chuẩn bị tệp tải xuống. Vui lòng thử lại.",
       fullRes: "Độ phân giải gốc {w} × {h} · miễn phí, không watermark",
       notReady: "Có sẵn khi xử lý xong",
       zip: "Tải tất cả dạng ZIP ({done}/{total})",
@@ -47,6 +48,7 @@ const vi: LocaleBundle = {
       gradients: "Chuyển màu",
       photos: "Ảnh",
       uploadBg: "Tải lên",
+      backgroundFailed: "Không thể mở nền này. Hãy thử lại hoặc chọn ảnh khác.",
       transparent: "Trong suốt",
       blur: "Làm mờ ảnh gốc",
       white: "Trắng",
@@ -60,6 +62,18 @@ const vi: LocaleBundle = {
       reset: "Quay lại kết quả AI",
       tip: "Mẹo: ảnh mờ là ảnh gốc. Dùng Khôi phục để tô lại phần bị mất và Xóa để dọn phần còn sót. Nhấn Ctrl/⌘ + Z để hoàn tác.",
       processedIn: "Đã xử lý trên thiết bị trong {s} giây",
+      quality: "Chất lượng AI",
+      qualityFast: "Nhanh",
+      qualityHd: "HD",
+      qualityUltra: "Siêu nét",
+      qualityGpuOnly: "Chế độ Siêu nét cần trình duyệt hỗ trợ WebGPU.",
+      edgeRefine: "Tinh chỉnh viền",
+      defringe: "Khử viền ám màu",
+      defringeHint: "Làm sạch màu nền lem trên tóc và đường viền",
+      defringeStrength: "Mức khử viền màu",
+      guidedEdges: "Làm sắc viền theo ảnh gốc",
+      guidedEdgesHint: "Căn chỉnh mặt nạ sát với cạnh ảnh độ phân giải gốc",
+      twoPass: "Cắt 2 bước",
     },
     page: {
       badge: "Miễn phí · Không cần đăng ký · Chạy trên trình duyệt",
@@ -115,7 +129,7 @@ const vi: LocaleBundle = {
     },
     steps: [
       { title: "Tải ảnh lên", text: "Nhấn Tải ảnh lên, kéo thả tệp, dán bằng Ctrl/⌘ + V hoặc nhập URL." },
-      { title: "AI xóa phông nền", text: "Mô hình tự động tách chủ thể khỏi phông nền — thường chỉ mất 1–3 giây." },
+      { title: "AI xóa phông nền", text: "Mô hình tự động tách chủ thể khỏi phông nền. Thời gian xử lý tùy thuộc vào thiết bị của bạn." },
       { title: "Chỉnh sửa & tải về", text: "Giữ nền trong suốt hoặc chọn màu, hiệu ứng mờ, ảnh nền rồi tải PNG hoặc JPG HD." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const vi: LocaleBundle = {
         heading: "“Remove bg” nghĩa là gì?",
         paragraphs: [
           "“Remove bg” là cách viết tắt tiếng Anh của “xóa phông nền”: giữ lại chủ thể và làm trong suốt phần còn lại. Kết quả được lưu ở định dạng PNG có hỗ trợ độ trong suốt, nên bạn có thể đặt chủ thể lên bất kỳ màu hay ảnh nào mà không bị khung viền.",
-          "Tách nền thủ công bằng Photoshop có thể mất 10–30 phút với ảnh có tóc. Công cụ AI làm việc đó trong một giây bằng cách dự đoán từng điểm ảnh có thuộc chủ thể hay không.",
+          "Tách nền thủ công bằng Photoshop có thể mất 10–30 phút với ảnh có tóc. Công cụ AI tự động hóa công việc đó bằng cách dự đoán từng điểm ảnh có thuộc chủ thể hay không.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const vi: LocaleBundle = {
     faqs: [
       { q: "BGRemove có thật sự miễn phí không?", a: "Có. Xóa phông, chỉnh sửa và tải PNG độ phân giải gốc đều miễn phí, không cần tài khoản. Không tín dụng, không watermark, không giới hạn mỗi ngày." },
       { q: "Ảnh của tôi có bị tải lên máy chủ không?", a: "Không. Mô hình AI được tải về một lần và chạy trong trình duyệt bằng WebGPU hoặc WebAssembly. Ảnh không bao giờ rời khỏi thiết bị của bạn." },
-      { q: "Vì sao ảnh đầu tiên xử lý lâu hơn?", a: "Lần đầu trình duyệt cần tải mô hình AI (khoảng 90–115 MB). Sau đó mô hình được lưu lại và mỗi ảnh chỉ mất vài giây, kể cả ở những lần truy cập sau." },
+      { q: "Vì sao ảnh đầu tiên xử lý lâu hơn?", a: "Lần đầu trình duyệt cần tải mô hình AI (khoảng 90–115 MB). Sau đó mô hình được lưu lại cho những lần truy cập sau. Thời gian xử lý tùy thuộc vào thiết bị của bạn." },
       { q: "Hỗ trợ những định dạng nào?", a: "JPG, PNG, WebP, AVIF, BMP, GIF và HEIC từ iPhone. Kết quả tải về dạng PNG trong suốt, hoặc JPG và WebP khi bạn thêm phông nền." },
       { q: "Tôi có thể dùng kết quả cho mục đích thương mại không?", a: "Có. Ảnh bạn xử lý thuộc về bạn: dùng cho cửa hàng online, quảng cáo hay dự án khách hàng, miễn là bạn có quyền với ảnh gốc." },
       { q: "Có dùng được trên điện thoại không?", a: "Có, trên Safari và Chrome cho iPhone và Android. Nhấn Tải ảnh lên, chọn ảnh trong thư viện và lưu kết quả về máy." },

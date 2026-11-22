@@ -36,6 +36,7 @@ const pl: LocaleBundle = {
       retry: "Spróbuj ponownie",
       download: "Pobierz PNG HD",
       preparing: "Przygotowywanie…",
+      downloadFailed: "Nie udało się przygotować pobierania. Spróbuj ponownie.",
       fullRes: "Pełna rozdzielczość {w} × {h} · za darmo, bez znaku wodnego",
       notReady: "Dostępne po zakończeniu przetwarzania",
       zip: "Pobierz wszystko jako ZIP ({done}/{total})",
@@ -47,6 +48,7 @@ const pl: LocaleBundle = {
       gradients: "Gradienty",
       photos: "Zdjęcia",
       uploadBg: "Prześlij",
+      backgroundFailed: "Nie udało się otworzyć tego tła. Spróbuj ponownie lub wybierz inny obraz.",
       transparent: "Przezroczyste",
       blur: "Rozmyj oryginał",
       white: "Białe",
@@ -60,6 +62,18 @@ const pl: LocaleBundle = {
       reset: "Wróć do wyniku AI",
       tip: "Wskazówka: przyciemniony obraz to oryginalne zdjęcie. Przywróć odzyskuje fragmenty, a Gumka usuwa resztki. Ctrl/⌘ + Z cofa zmianę.",
       processedIn: "Przetworzono na Twoim urządzeniu w {s} s",
+      quality: "Jakość AI",
+      qualityFast: "Szybka",
+      qualityHd: "HD",
+      qualityUltra: "Ultra",
+      qualityGpuOnly: "Tryb Ultra wymaga przeglądarki z obsługą WebGPU.",
+      edgeRefine: "Dopracowanie krawędzi",
+      defringe: "Usuń kolorową obwódkę",
+      defringeHint: "Usuwa poświatę tła z włosów i krawędzi",
+      defringeStrength: "Siła usuwania obwódki",
+      guidedEdges: "Dopasuj krawędzie do zdjęcia",
+      guidedEdgesHint: "Precyzyjnie wyrównuje maskę do krawędzi w pełnej rozdzielczości",
+      twoPass: "Kadrowanie 2-etapowe",
     },
     page: {
       badge: "Za darmo · Bez rejestracji · Działa w przeglądarce",
@@ -115,7 +129,7 @@ const pl: LocaleBundle = {
     },
     steps: [
       { title: "Prześlij zdjęcie", text: "Kliknij Prześlij zdjęcie, przeciągnij plik, wklej go przez Ctrl/⌘ + V lub podaj adres URL." },
-      { title: "AI usuwa tło", text: "Model automatycznie oddziela obiekt od tła — zwykle w 1–3 sekundy." },
+      { title: "AI usuwa tło", text: "Model automatycznie oddziela obiekt od tła. Czas przetwarzania zależy od Twojego urządzenia." },
       { title: "Edytuj i pobierz", text: "Zostaw przezroczystość albo wybierz kolor, rozmycie lub zdjęcie i pobierz PNG lub JPG w HD." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const pl: LocaleBundle = {
         heading: "Co oznacza „remove bg”?",
         paragraphs: [
           "„Remove bg” to angielski skrót od „usuń tło”: obiekt zostaje, a reszta staje się przezroczysta. Wynik zapisuje się w formacie PNG, który obsługuje przezroczystość, więc wycięty obiekt można położyć na dowolnym kolorze lub zdjęciu bez widocznej ramki.",
-          "Ręczne wycinanie w Photoshopie zajmuje 10–30 minut, gdy na zdjęciu są włosy. Narzędzie AI robi to samo w sekundę, przewidując piksel po pikselu, co należy do obiektu.",
+          "Ręczne wycinanie w Photoshopie zajmuje 10–30 minut, gdy na zdjęciu są włosy. Narzędzie AI automatyzuje tę pracę, przewidując piksel po pikselu, co należy do obiektu.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const pl: LocaleBundle = {
     faqs: [
       { q: "Czy BGRemove jest naprawdę darmowy?", a: "Tak. Usuwanie tła, poprawki i pobieranie PNG w pełnej rozdzielczości nic nie kosztują i nie wymagają konta. Bez kredytów, znaków wodnych i dziennych limitów." },
       { q: "Czy moje zdjęcia są wysyłane na serwer?", a: "Nie. Model AI pobiera się raz i działa w przeglądarce dzięki WebGPU lub WebAssembly. Zdjęcia nigdy nie opuszczają Twojego urządzenia." },
-      { q: "Dlaczego pierwsze zdjęcie trwa dłużej?", a: "Za pierwszym razem przeglądarka pobiera model AI (ok. 90–115 MB). Potem jest zapamiętany i każde zdjęcie przetwarza się w kilka sekund, także podczas kolejnych wizyt." },
+      { q: "Dlaczego pierwsze zdjęcie trwa dłużej?", a: "Za pierwszym razem przeglądarka pobiera model AI (ok. 90–115 MB). Potem jest zapisany na kolejne wizyty. Czas przetwarzania zależy od Twojego urządzenia." },
       { q: "Jakie formaty są obsługiwane?", a: "JPG, PNG, WebP, AVIF, BMP, GIF oraz HEIC z iPhone'a. Wynik pobierzesz jako przezroczysty PNG albo — z tłem — jako JPG i WebP." },
       { q: "Czy mogę używać wyników komercyjnie?", a: "Tak. Przetworzone zdjęcia należą do Ciebie: sklepy, reklamy, projekty dla klientów — o ile masz prawa do oryginalnego zdjęcia." },
       { q: "Czy działa na telefonie?", a: "Tak, w Safari i Chrome na iPhonie i Androidzie. Stuknij Prześlij zdjęcie, wybierz zdjęcie z galerii i zapisz wynik w telefonie." },

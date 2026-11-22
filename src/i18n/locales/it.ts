@@ -36,6 +36,7 @@ const it: LocaleBundle = {
       retry: "Riprova",
       download: "Scarica PNG HD",
       preparing: "Preparazione…",
+      downloadFailed: "Impossibile preparare il download. Riprova.",
       fullRes: "Risoluzione piena {w} × {h} · gratis, senza filigrana",
       notReady: "Disponibile al termine dell'elaborazione",
       zip: "Scarica tutto in ZIP ({done}/{total})",
@@ -47,6 +48,7 @@ const it: LocaleBundle = {
       gradients: "Sfumature",
       photos: "Foto",
       uploadBg: "Carica",
+      backgroundFailed: "Impossibile aprire questo sfondo. Riprova o scegli un’altra immagine.",
       transparent: "Trasparente",
       blur: "Sfoca originale",
       white: "Bianco",
@@ -60,6 +62,18 @@ const it: LocaleBundle = {
       reset: "Torna al risultato IA",
       tip: "Suggerimento: l'immagine sbiadita è la foto originale. Usa Ripristina per recuperare parti e Cancella per pulire i residui. Ctrl/⌘ + Z per annullare.",
       processedIn: "Elaborata sul tuo dispositivo in {s} s",
+      quality: "Qualità IA",
+      qualityFast: "Veloce",
+      qualityHd: "HD",
+      qualityUltra: "Ultra",
+      qualityGpuOnly: "Ultra richiede un browser con supporto WebGPU.",
+      edgeRefine: "Rifinitura bordi",
+      defringe: "Rimuovi aloni di colore",
+      defringeHint: "Pulisce i riflessi dello sfondo su capelli e bordi",
+      defringeStrength: "Intensità anti-alone",
+      guidedEdges: "Affina i bordi sulla foto",
+      guidedEdgesHint: "Allinea la maschera con precisione ai bordi ad alta risoluzione",
+      twoPass: "Ritaglio a 2 passaggi",
     },
     page: {
       badge: "Gratis · Senza registrazione · Nel tuo browser",
@@ -115,7 +129,7 @@ const it: LocaleBundle = {
     },
     steps: [
       { title: "Carica l'immagine", text: "Clicca su Carica immagine, trascina un file, incollalo con Ctrl/⌘ + V o inserisci un URL." },
-      { title: "L'IA rimuove lo sfondo", text: "Il modello separa automaticamente soggetto e sfondo, di solito in 1-3 secondi." },
+      { title: "L'IA rimuove lo sfondo", text: "Il modello separa automaticamente soggetto e sfondo. Il tempo di elaborazione dipende dal dispositivo." },
       { title: "Modifica e scarica", text: "Lascialo trasparente o scegli un colore, una sfocatura o una foto, poi scarica il PNG o JPG in HD." },
     ],
     useCases: [
@@ -129,7 +143,7 @@ const it: LocaleBundle = {
         heading: "Cosa significa «remove bg»?",
         paragraphs: [
           "«Remove bg» è l'abbreviazione inglese di «rimuovere lo sfondo»: tenere il soggetto e rendere trasparente tutto il resto. Il risultato si salva in PNG, un formato che supporta la trasparenza, così puoi appoggiare il ritaglio su qualsiasi colore o foto senza riquadri visibili.",
-          "Scontornare a mano in Photoshop può richiedere 10-30 minuti se ci sono capelli. Uno strumento con IA fa lo stesso lavoro in un secondo, prevedendo pixel per pixel cosa appartiene al soggetto.",
+          "Scontornare a mano in Photoshop può richiedere 10-30 minuti se ci sono capelli. Uno strumento con IA automatizza questo lavoro, prevedendo pixel per pixel cosa appartiene al soggetto.",
         ],
       },
       {
@@ -142,7 +156,7 @@ const it: LocaleBundle = {
     faqs: [
       { q: "BGRemove è davvero gratuito?", a: "Sì. Rimuovere lo sfondo, ritoccare il ritaglio e scaricare il PNG a piena risoluzione non costa nulla e non richiede un account. Niente crediti, filigrane o limiti giornalieri." },
       { q: "Le mie immagini vengono caricate su un server?", a: "No. Il modello di IA viene scaricato una sola volta e gira nel tuo browser tramite WebGPU o WebAssembly. Le tue foto non lasciano mai il dispositivo." },
-      { q: "Perché la prima immagine è più lenta?", a: "La prima volta il browser scarica il modello di IA (circa 90–115 MB). Poi resta in cache e ogni immagine viene elaborata in pochi secondi, anche nelle visite successive." },
+      { q: "Perché la prima immagine è più lenta?", a: "La prima volta il browser scarica il modello di IA (circa 90–115 MB). Poi resta in cache per le visite successive. Il tempo di elaborazione dipende dal dispositivo." },
       { q: "Quali formati sono supportati?", a: "JPG, PNG, WebP, AVIF, BMP, GIF e HEIC dell'iPhone. Il risultato si scarica in PNG trasparente, oppure in JPG e WebP se aggiungi uno sfondo." },
       { q: "Posso usare i risultati per scopi commerciali?", a: "Sì. Le immagini elaborate sono tue: negozi online, pubblicità o lavori per clienti, purché tu abbia i diritti sulla foto originale." },
       { q: "Funziona da smartphone?", a: "Sì, con Safari e Chrome su iPhone e Android. Tocca Carica immagine, scegli una foto dalla galleria e salva il risultato sul telefono." },
