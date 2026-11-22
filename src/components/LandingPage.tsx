@@ -9,6 +9,9 @@ import JsonLd from "./JsonLd";
 import UploadButton from "./UploadButton";
 import UploadCard from "./remover/UploadCard";
 
+// These files keep stable names, so bump the revision whenever samples change.
+const SAMPLE_REVISION = "20261122";
+
 const EXAMPLES = [
   { id: "woman", backdrop: undefined },
   { id: "dog", backdrop: "linear-gradient(135deg,#fbc2eb,#a6c1ee)" },
@@ -92,7 +95,7 @@ export default function LandingPage({ content, locale = "en", label }: { content
             <div className="mt-8 hidden lg:block">
               <CompareDemo
                 before="/samples/woman-800.webp"
-                after="/samples/woman-cut.webp"
+                after={`/samples/woman-cut.webp?v=${SAMPLE_REVISION}`}
                 alt={fmt(t.exampleAlt, { page: pageName, subject: t.examples.woman })}
                 auto
                 priority
@@ -129,7 +132,7 @@ export default function LandingPage({ content, locale = "en", label }: { content
             <figure key={ex.id} className="overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-line">
               <CompareDemo
                 before={`/samples/${ex.id}-800.webp`}
-                after={`/samples/${ex.id}-cut.webp`}
+                after={`/samples/${ex.id}-cut.webp?v=${SAMPLE_REVISION}`}
                 alt={fmt(t.exampleAlt, { page: pageName, subject: t.examples[ex.id] })}
                 backdrop={ex.backdrop}
                 className="aspect-square w-full"
